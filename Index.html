@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <title>Le Magazynier</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Caveat&family=Great+Vibes&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 16px;
+      background-color: #1c1c1c;
+      font-family: sans-serif;
+      color: #f5f5f5;
+    }
+    .form-wrapper {
+      max-width: 500px;
+      margin: auto;
+      background: #333333;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 90vh;
+    }
+
+    .logo {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 20px;
+    }
+    .logo-left {
+      font-family: 'Informal Roman', cursive;
+      color: #f9f9f9;
+      line-height: 0.9;
+      margin-left: 30px;
+    }
+    .logo-left .main {
+      font-size: 3rem;
+    }
+    .logo-left .sub {
+      font-size: 2rem;
+      transform: translateY(-11px) translateX(15px);
+      opacity: 0.8;
+    }
+    .logo-right {
+      text-align: right;
+      color: #ccc;
+      font-family: 'Informal Roman', cursive;
+    }
+    .logo-right .by {
+      font-size: 1.1rem;
+      margin-bottom: 2px;
+    }
+    .logo-right .initials {
+      font-size: 1.5rem;
+      font-weight: bold;
+      line-height: 1;
+      transform: translateX(-20px);
+    }
+
+    input {
+      margin: 6px 0 20px;
+      padding: 10px;
+      width: 100%;
+      font-size: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+
+    input.uppercase {
+      text-transform: uppercase;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .buttons {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 20px;
+    }
+    .buttons button {
+      flex: 1;
+      padding: 12px;
+      font-size: 1rem;
+      border: none;
+      border-radius: 6px;
+      background-color: #666;
+      color: white;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    .buttons button:hover {
+      background-color: #888;
+    }
+
+    .logout-btn {
+      background-color: #aa3333;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      color: white;
+      cursor: pointer;
+      margin-top: 20px;
+      float: right;
+    }
+
+    .footer-logo {
+      margin-top: 20px;
+      text-align: center;
+    }
+    .footer-logo img {
+      width: 25%;
+      max-width: 150px;
+      height: auto;
+    }
+    .footer-text {
+      margin-top: 6px;
+      font-size: 1rem;
+      color: #bbb;
+      font-family: 'Caveat', cursive;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="form-wrapper">
+    <div>
+      <!-- Nagłówek -->
+      <div class="logo">
+        <div class="logo-left">
+          <div class="main">Le Magazynier</div>
+          <div class="sub">Orleans</div>
+        </div>
+        <div class="logo-right">
+          <div class="by">Created by JJ</div>
+          <div class="initials"></div>
+        </div>
+      </div>
+
+      <!-- Logowanie -->
+      <input type="password" id="kod" placeholder="Kod pracownika" required>
+      <button onclick="checkLogin()">Zaloguj</button>
+
+      <!-- Powitanie i dalsze pola -->
+      <div id="form-section" class="hidden">
+        <p>Witaj, <strong id="user-name"></strong>!</p>
+
+        <input type="text" id="trasa" class="uppercase" placeholder="Nr trasy" required>
+        <input type="text" id="tablica" class="uppercase" placeholder="Tablica rejestracyjna" required>
+
+        <div class="buttons">
+          <button onclick="goTo('pz.html')">Przyjęcie</button>
+          <button onclick="goTo('wz.html')">Wydanie</button>
+        </div>
+
+        <!-- Wylogowanie -->
+        <button class="logout-btn" onclick="logout()">Wyloguj</button>
+      </div>
+    </div>
+
+    <div class="footer-logo">
+      <img src="https://gpbs.pl/assets/images/xlogo_wh.png.pagespeed.ic.3FdfUvX7s-.webp" alt="Logo GPBS">
+    </div>
+  </div>
+
+  <script>
+    // Lista kodów: kod => login
+    const users = {
+      "1234": "Jaro",
+      "4321": "Krystian",
+      "1111": "Mateusz"
+    };
+
+    function checkLogin() {
+      const kod = document.getElementById("kod").value.trim();
+      const login = users[kod];
+
+      if (!login) {
+        alert("Niepoprawny kod pracownika.");
+        return;
+      }
+
+      localStorage.setItem("login", login);
+      document.getElementById("user-name").textContent = login;
+      document.getElementById("form-section").classList.remove("hidden");
+      document.getElementById("kod").classList.add("hidden");
+      event.target.style.display = "none";
+    }
+
+    function goTo(destination) {
+      const trasa = document.getElementById("trasa").value.trim().toUpperCase();
+      const tablica = document.getElementById("tablica").value.trim().toUpperCase();
+
+      if (!trasa || !tablica) {
+        alert("Proszę uzupełnić wszystkie pola.");
+        return;
+      }
+
+      localStorage.setItem("trasa", trasa);
+      localStorage.setItem("tablica", tablica);
+
+      const url = `${destination}?trasa=${encodeURIComponent(trasa)}&tablica=${encodeURIComponent(tablica)}`;
+      window.location.href = url;
+    }
+
+    function logout() {
+      // Usuń dane z localStorage
+      localStorage.removeItem("login");
+      localStorage.removeItem("trasa");
+      localStorage.removeItem("tablica");
+
+      // Ukryj formularz, pokaż pole logowania
+      document.getElementById("form-section").classList.add("hidden");
+      document.getElementById("kod").classList.remove("hidden");
+      document.getElementById("kod").value = "";
+
+      // Wyczyść pola tekstowe
+      document.getElementById("trasa").value = "";
+      document.getElementById("tablica").value = "";
+
+      // Przywróć przycisk logowania
+      document.querySelector("button[onclick='checkLogin()']").style.display = "inline-block";
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      const login = localStorage.getItem("login");
+      const trasa = localStorage.getItem("trasa");
+      const tablica = localStorage.getItem("tablica");
+
+      if (login) {
+        document.getElementById("user-name").textContent = login;
+        document.getElementById("form-section").classList.remove("hidden");
+        document.getElementById("kod").classList.add("hidden");
+        document.querySelector("button[onclick='checkLogin()']").style.display = "none";
+      }
+
+      if (trasa) document.getElementById("trasa").value = trasa;
+      if (tablica) document.getElementById("tablica").value = tablica;
+    });
+  </script>
+
+</body>
+</html>
