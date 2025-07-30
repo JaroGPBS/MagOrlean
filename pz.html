@@ -137,51 +137,82 @@
     <div class="data-display" id="daneUzytkownika">Wczytywanie danych...</div>
     <div id="reader"></div>
     <div id="scan-result">Zeskanuj kod QR...</div>
-    <input type="text" id="manualInput" placeholder="Dodaj kod ręcznie">
+
+    <input type="text" id="manualInput" placeholder="Dodaj kod ręcznie" autocomplete="off">
     <button onclick="addManual()">Dodaj do listy</button>
+
     <h3>Lista kodów:</h3>
     <ul id="codeList"></ul>
-    <input type="text" id="dodatkoweInfo" placeholder="Dodatkowe informacje (opcjonalne)">
+
+    <input type="text" id="dodatkoweInfo" placeholder="Dodatkowe informacje (opcjonalne)" autocomplete="off">
+
     <button onclick="sendData()">Wyślij dane</button>
     <p id="status"></p>
   </div>
+
   <div class="footer-logo">
     <p class="footer-text">Created by Jaro</p>
     <img src="https://gpbs.pl/assets/images/xlogo_wh.png.pagespeed.ic.3FdfUvX7s-.webp" alt="Logo GPBS">
   </div>
 </div>
+
+<!-- DATALIST z podpowiedziami -->
+<datalist id="typy">
+  <option value="FM">
+  <option value="LQ">
+  <option value="RQ">
+  <option value="XS">
+  <option value="ODL">
+  <option value="ODR">
+  <option value="CU">
+  <option value="DUO">
+  <option value="HICU">
+  <option value="HIDUO">
+  <option value="FMB">
+  <option value="LQB">
+  <option value="RQB">
+</datalist>
+
 <script>
 function goBack() {
   window.location.href = "index.html";
 }
 const scriptURL = "https://script.google.com/macros/s/AKfycbyV9AfOiRfwMR-fueFzFwwgJHXQO1GG2R5yaNgr-mFwuyk535Nug0cbL7utM7RhDGpWZQ/exec";
 let codes = [];
+
 function updateList() {
   const list = document.getElementById("codeList");
   list.innerHTML = "";
   const allowed = ["FM", "LQ", "RQ", "XS", "ODL", "ODR", "CU", "DUO", "HICU", "HIDUO", "FMB", "LQB", "RQB"];
+
   codes.forEach((item, index) => {
     const li = document.createElement("li");
+
     const inputNote = document.createElement("input");
     inputNote.type = "text";
     inputNote.placeholder = "TYP";
     inputNote.className = "note-input";
+    inputNote.setAttribute("list", "typy"); // przypisanie datalist
     inputNote.value = item.note || "";
+
     inputNote.oninput = () => {
       const val = inputNote.value.toUpperCase().trim();
       inputNote.value = val;
       codes[index].note = val;
       inputNote.style.borderColor = allowed.includes(val) ? "#0f0" : "red";
     };
+
     const codeText = document.createElement("span");
     codeText.className = "code-text";
     codeText.textContent = item.value;
+
     const nokLabel = document.createElement("label");
     nokLabel.style.display = "flex";
     nokLabel.style.alignItems = "center";
     nokLabel.style.gap = "4px";
     nokLabel.style.fontSize = "0.9rem";
     nokLabel.style.marginLeft = "auto";
+
     const nokCheckbox = document.createElement("input");
     nokCheckbox.type = "checkbox";
     nokCheckbox.checked = !!item.nok;
@@ -193,12 +224,15 @@ function updateList() {
       nokCheckbox.style.accentColor = nokCheckbox.checked ? "#ff4444" : "#00cc00";
     };
     nokCheckbox.style.accentColor = nokCheckbox.checked ? "#ff4444" : "#00cc00";
+
     nokLabel.appendChild(nokCheckbox);
     nokLabel.appendChild(document.createTextNode("NOK"));
+
     const remove = document.createElement("span");
     remove.className = "remove-btn";
     remove.textContent = "✕";
     remove.onclick = () => removeCode(index);
+
     li.appendChild(inputNote);
     li.appendChild(codeText);
     li.appendChild(nokLabel);
@@ -206,6 +240,7 @@ function updateList() {
     list.appendChild(li);
   });
 }
+
 function addManual() {
   const val = document.getElementById("manualInput").value.trim();
   if (val && !codes.find(c => c.value === val)) {
@@ -214,10 +249,12 @@ function addManual() {
     updateList();
   }
 }
+
 function removeCode(index) {
   codes.splice(index, 1);
   updateList();
 }
+
 function sendData() {
   const login = localStorage.getItem("login") || "";
   const trasa = localStorage.getItem("trasa") || "";
@@ -232,16 +269,19 @@ function sendData() {
     return;
   }
   if (!confirm("Czy na pewno chcesz wysłać dane?")) return;
+
   const finalData = codes.map(c => {
     const status = c.nok ? "NOK" : "OK";
     return `${c.value} | ${c.note} | ${status}`;
   });
+
   const formData = new FormData();
   formData.append("login", login);
   formData.append("trasa", trasa);
   formData.append("tablica", tablica);
   formData.append("dodatkowe", dodatkoweInfo || "-");
   formData.append("kody", JSON.stringify(finalData));
+
   fetch(scriptURL, {
     method: "POST",
     body: formData
@@ -251,20 +291,20 @@ function sendData() {
     alert("✅ Dane wysłane.");
     codes = [];
     updateList();
-    localStorage.removeItem("login");
-    localStorage.removeItem("trasa");
-    localStorage.removeItem("tablica");
     window.location.href = "index.html";
   })
   .catch(err => {
     document.getElementById("status").innerText = "❌ Błąd: " + err;
   });
 }
+
 document.addEventListener("DOMContentLoaded", () => {
   const login = localStorage.getItem("login") || "brak";
   const trasa = localStorage.getItem("trasa") || "brak";
   const tablica = localStorage.getItem("tablica") || "brak";
+
   document.getElementById("daneUzytkownika").innerHTML = `${login}<br>${trasa}<br>${tablica}`;
+
   const html5Qr = new Html5Qrcode("reader");
   Html5Qrcode.getCameras().then(cameras => {
     if (cameras && cameras.length) {
