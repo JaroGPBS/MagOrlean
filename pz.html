@@ -287,12 +287,18 @@ function sendData() {
     body: formData
   })
   .then(res => res.text())
-  .then(txt => {
-    alert("✅ Dane wysłane.");
-    codes = [];
-    updateList();
-    window.location.href = "index.html";
-  })
+.then(txt => {
+  alert("✅ Dane wysłane.");
+  codes = [];
+  updateList();
+
+  // Wyczyść trasa i tablica (ale NIE login!)
+  localStorage.removeItem("trasa");
+  localStorage.removeItem("tablica");
+
+  window.location.href = "index.html";
+})
+
   .catch(err => {
     document.getElementById("status").innerText = "❌ Błąd: " + err;
   });
