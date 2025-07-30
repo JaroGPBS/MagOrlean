@@ -121,17 +121,11 @@
       max-width: 150px;
       height: auto;
     }
-    .footer-text {
-      margin-top: 6px;
-      font-size: 1rem;
-      color: #bbb;
-      font-family: 'Caveat', cursive;
-    }
   </style>
 </head>
 <body>
 
-  <div class="form-wrapper">
+  <div class="form-wrapper" autocomplete="off">
     <div>
       <!-- Nagłówek -->
       <div class="logo">
@@ -149,19 +143,18 @@
       <input type="password" id="kod" placeholder="Kod pracownika" required>
       <button onclick="checkLogin()">Zaloguj</button>
 
-      <!-- Powitanie i dalsze pola -->
+      <!-- Sekcja po zalogowaniu -->
       <div id="form-section" class="hidden">
         <p>Witaj, <strong id="user-name"></strong>!</p>
 
-        <input type="text" id="trasa" class="uppercase" placeholder="Nr trasy" required>
-        <input type="text" id="tablica" class="uppercase" placeholder="Tablica rejestracyjna" required>
+        <input type="text" id="trasa" class="uppercase" placeholder="NR TRASY" required autocomplete="off">
+        <input type="text" id="tablica" class="uppercase" placeholder="TABLICA REJESTRACYJNA" required autocomplete="off">
 
         <div class="buttons">
           <button onclick="goTo('pz.html')">Przyjęcie</button>
           <button onclick="goTo('wz.html')">Wydanie</button>
         </div>
 
-        <!-- Wylogowanie -->
         <button class="logout-btn" onclick="logout()">Wyloguj</button>
       </div>
     </div>
@@ -172,7 +165,6 @@
   </div>
 
   <script>
-    // Lista kodów: kod => login
     const users = {
       "1234": "Jaro",
       "4321": "Krystian",
@@ -212,21 +204,13 @@
     }
 
     function logout() {
-      // Usuń dane z localStorage
       localStorage.removeItem("login");
       localStorage.removeItem("trasa");
       localStorage.removeItem("tablica");
 
-      // Ukryj formularz, pokaż pole logowania
       document.getElementById("form-section").classList.add("hidden");
       document.getElementById("kod").classList.remove("hidden");
       document.getElementById("kod").value = "";
-
-      // Wyczyść pola tekstowe
-      document.getElementById("trasa").value = "";
-      document.getElementById("tablica").value = "";
-
-      // Przywróć przycisk logowania
       document.querySelector("button[onclick='checkLogin()']").style.display = "inline-block";
     }
 
