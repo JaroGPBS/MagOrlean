@@ -214,21 +214,21 @@
       document.querySelector("button[onclick='checkLogin()']").style.display = "inline-block";
     }
 
-    document.addEventListener("DOMContentLoaded", () => {
-      const login = localStorage.getItem("login");
-      const trasa = localStorage.getItem("trasa");
-      const tablica = localStorage.getItem("tablica");
+document.addEventListener("DOMContentLoaded", () => {
+  const login = localStorage.getItem("login");
+  const trasa = localStorage.getItem("trasa");
+  const tablica = localStorage.getItem("tablica");
 
-      if (login) {
-        document.getElementById("user-name").textContent = login;
-        document.getElementById("form-section").classList.remove("hidden");
-        document.getElementById("kod").classList.add("hidden");
-        document.querySelector("button[onclick='checkLogin()']").style.display = "none";
-      }
+  if (login) {
+    document.getElementById("user-name").textContent = login;
+    document.getElementById("form-section").classList.remove("hidden");
+    document.getElementById("kod").classList.add("hidden");
+    document.querySelector("button[onclick='checkLogin()']").style.display = "none";
+  }
 
-      if (trasa) document.getElementById("trasa").value = trasa;
-      if (tablica) document.getElementById("tablica").value = tablica;
-    });
+  if (trasa) document.getElementById("trasa").value = trasa;
+  if (tablica) document.getElementById("tablica").value = tablica;
+});
   </script>
 
 </body>
