@@ -301,6 +301,10 @@
               codes.push({ value: text, note: "" });
               updateList();
               document.getElementById("scan-result").innerText = "Zeskanowano: " + text;
+
+               // 📳 Wibracja
+              if (navigator.vibrate) {
+              navigator.vibrate(100); // 100 ms
             }
           });
         } else {
