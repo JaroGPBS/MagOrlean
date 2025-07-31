@@ -312,22 +312,33 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("daneUzytkownika").innerHTML = `${login}<br>${trasa}<br>${tablica}`;
 
   const html5Qr = new Html5Qrcode("reader");
-  Html5Qrcode.getCameras().then(cameras => {
-    if (cameras && cameras.length) {
-      html5Qr.start(cameras[0].id, { fps: 10, qrbox: 250 }, text => {
+Html5Qrcode.getCameras().then(cameras => {
+  if (cameras && cameras.length) {
+    // Szukamy tylnej kamery
+    const backCam = cameras.find(cam =>
+      cam.label.toLowerCase().includes("back") || cam.label.toLowerCase().includes("rear")
+    );
+
+    const selectedCam = backCam ? backCam.id : cameras[0].id;
+
+    html5Qr.start(
+      selectedCam,
+      { fps: 10, qrbox: 250 },
+      text => {
         if (!codes.find(c => c.value === text)) {
           codes.push({ value: text, note: "", nok: false });
           updateList();
           document.getElementById("scan-result").innerText = "Zeskanowano: " + text;
         }
-      });
-    } else {
-      document.getElementById("scan-result").innerText = "❌ Nie wykryto kamery.";
-    }
-  }).catch(err => {
-    document.getElementById("scan-result").innerText = "❌ Błąd kamery: " + err;
-  });
+      }
+    );
+  } else {
+    document.getElementById("scan-result").innerText = "❌ Nie wykryto kamery.";
+  }
+}).catch(err => {
+  document.getElementById("scan-result").innerText = "❌ Błąd kamery: " + err;
 });
+
 </script>
 </body>
 </html>
