@@ -183,6 +183,7 @@ function updateList() {
     inputNote.className = "note-input";
     inputNote.value = item.note || "";
     inputNote.setAttribute("list", "typList");
+    formData.append("strona", "pz");
 
     inputNote.oninput = () => {
       const val = inputNote.value.toUpperCase().trim();
