@@ -167,7 +167,6 @@ function goBack() {
 
 const scriptURL = "https://script.google.com/macros/s/AKfycbxO0JTvxZZgCiQBzLlDP4ZdBl781_QaAm1jM4Um7_EmhIvQ3iN3j2D3spJ3LLtlZ_qEPA/exec";
 let codes = [];
-
 const allowed = ["FM", "LQ", "RQ", "XS", "ODL", "ODR", "CU", "DUO", "HICU", "HIDUO", "FMB", "LQB", "RQB"];
 
 function updateList() {
@@ -183,7 +182,6 @@ function updateList() {
     inputNote.className = "note-input";
     inputNote.value = item.note || "";
     inputNote.setAttribute("list", "typList");
-    formData.append("strona", "pz");
 
     inputNote.oninput = () => {
       const val = inputNote.value.toUpperCase().trim();
@@ -270,6 +268,7 @@ function sendData() {
   formData.append("tablica", tablica);
   formData.append("dodatkowe", dodatkoweInfo || "-");
   formData.append("kody", JSON.stringify(finalData));
+  formData.append("strona", "pz"); // ⬅️ KLUCZOWY DODANY PARAMETR
 
   fetch(scriptURL, {
     method: "POST",
