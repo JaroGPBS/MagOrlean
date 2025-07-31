@@ -231,55 +231,55 @@
     }
 
     function sendData() {
-      const login = localStorage.getItem("login") || "";
-      const trasa = localStorage.getItem("trasa") || "";
-      const tablica = localStorage.getItem("tablica") || "";
-      const dodatkowe = document.getElementById("dodatkoweInfo").value.trim();
+  if (!confirm("Czy na pewno chcesz wysłać dane?")) return;
 
-      const typDostawy = document.querySelector('input[name="typDostawy"]:checked');
-      if (!typDostawy) {
-        alert("Wybierz typ dostawy: Załadunek lub Doładunek.");
-        return;
-      }
+  const login = localStorage.getItem("login") || "";
+  const trasa = localStorage.getItem("trasa") || "";
+  const tablica = localStorage.getItem("tablica") || "";
+  const dodatkoweInfo = document.getElementById("dodatkoweInfo").value.trim();
+  const typDostawy = document.querySelector('input[name="typDostawy"]:checked')?.value || "";
 
-      if (!login || !trasa || !tablica || codes.length === 0) {
-        alert("Brakuje danych lub lista kodów jest pusta.");
-        return;
-      }
+  if (!login || !trasa || !tablica || codes.length === 0 || !typDostawy) {
+    alert("Brakuje danych lub lista kodów jest pusta.");
+    return;
+  }
 
-      if (!codes.every(c => typeof c.note === "string" && c.note.trim() !== "")) {
-      alert("Wszystkie pola TYP muszą być uzupełnione.");
-      return;
-      }
+  if (!codes.every(c => typeof c.note === "string" && c.note.trim() !== "")) {
+    alert("Wszystkie pola TYP muszą być uzupełnione.");
+    return;
+  }
 
-      const finalData = codes.map(c => `${c.note} - ${c.value}`);
+  const finalData = codes.map(c => {
+    const status = c.nok ? "NOK" : "OK";
+    return `${c.value} | ${c.note} | ${status}`;
+  });
 
-      const formData = new FormData();
-      formData.append("login", login);
-      formData.append("trasa", trasa);
-      formData.append("tablica", tablica);
-      formData.append("dodatkowe", dodatkowe || "-");
-      formData.append("typDostawy", typDostawy.value);
-      formData.append("kody", JSON.stringify(finalData));
-      formData.append("strona", "wz"); // ← KLUCZOWE
+  const formData = new FormData();
+  formData.append("login", login);
+  formData.append("trasa", trasa);
+  formData.append("tablica", tablica);
+  formData.append("dodatkowe", dodatkoweInfo || "-");
+  formData.append("typDostawy", typDostawy);
+  formData.append("kody", JSON.stringify(finalData));
+  formData.append("strona", "wz");
 
-      fetch(scriptURL, {
-        method: "POST",
-        body: formData
-      })
-      .then(res => res.text())
-      .then(txt => {
-        alert("✅ Dane wysłane.");
-        codes = [];
-        updateList();
-        localStorage.removeItem("trasa");
-        localStorage.removeItem("tablica");
-        window.location.href = "index.html";
-      })
-      .catch(err => {
-        document.getElementById("status").innerText = "❌ Błąd: " + err;
-      });
-    }
+  fetch(scriptURL, {
+    method: "POST",
+    body: formData
+  })
+    .then(res => res.text())
+    .then(txt => {
+      alert("✅ Dane wysłane.");
+      codes = [];
+      updateList();
+      localStorage.removeItem("trasa");
+      localStorage.removeItem("tablica");
+      window.location.href = "index.html";
+    })
+    .catch(err => {
+      document.getElementById("status").innerText = "❌ Błąd: " + err;
+    });
+}
 
     document.addEventListener("DOMContentLoaded", () => {
       const login = localStorage.getItem("login") || "brak";
