@@ -70,6 +70,13 @@
       border: 1px solid #ccc;
       border-radius: 4px;
     }
+    input {
+      background-color: #222;
+      color: #f5f5f5;
+    }
+    input::placeholder {
+      color: #999;
+    }
     #reader {
       width: 100%;
       max-width: 400px;
@@ -99,6 +106,8 @@
       border-radius: 4px;
       font-size: 0.9rem;
       text-transform: uppercase;
+      background-color: #1c1c1c;
+      color: #f5f5f5;
     }
     .code-text {
       flex: 1;
@@ -137,53 +146,33 @@
     <div class="data-display" id="daneUzytkownika">Wczytywanie danych...</div>
     <div id="reader"></div>
     <div id="scan-result">Zeskanuj kod QR...</div>
-
     <input type="text" id="manualInput" placeholder="Dodaj kod ręcznie" autocomplete="off">
     <button onclick="addManual()">Dodaj do listy</button>
-
     <h3>Lista kodów:</h3>
     <ul id="codeList"></ul>
-
     <input type="text" id="dodatkoweInfo" placeholder="Dodatkowe informacje (opcjonalne)" autocomplete="off">
-
     <button onclick="sendData()">Wyślij dane</button>
     <p id="status"></p>
   </div>
-
   <div class="footer-logo">
     <p class="footer-text">Created by Jaro</p>
     <img src="https://gpbs.pl/assets/images/xlogo_wh.png.pagespeed.ic.3FdfUvX7s-.webp" alt="Logo GPBS">
   </div>
 </div>
 
-<!-- DATALIST z podpowiedziami -->
-<datalist id="typy">
-  <option value="FM">
-  <option value="LQ">
-  <option value="RQ">
-  <option value="XS">
-  <option value="ODL">
-  <option value="ODR">
-  <option value="CU">
-  <option value="DUO">
-  <option value="HICU">
-  <option value="HIDUO">
-  <option value="FMB">
-  <option value="LQB">
-  <option value="RQB">
-</datalist>
-
 <script>
 function goBack() {
   window.location.href = "index.html";
 }
-const scriptURL = "https://script.google.com/macros/s/AKfycbyV9AfOiRfwMR-fueFzFwwgJHXQO1GG2R5yaNgr-mFwuyk535Nug0cbL7utM7RhDGpWZQ/exec";
+
+const scriptURL = "https://script.google.com/macros/s/YOUR_WEB_APP_URL/exec";
 let codes = [];
+
+const allowed = ["FM", "LQ", "RQ", "XS", "ODL", "ODR", "CU", "DUO", "HICU", "HIDUO", "FMB", "LQB", "RQB"];
 
 function updateList() {
   const list = document.getElementById("codeList");
   list.innerHTML = "";
-  const allowed = ["FM", "LQ", "RQ", "XS", "ODL", "ODR", "CU", "DUO", "HICU", "HIDUO", "FMB", "LQB", "RQB"];
 
   codes.forEach((item, index) => {
     const li = document.createElement("li");
@@ -192,8 +181,8 @@ function updateList() {
     inputNote.type = "text";
     inputNote.placeholder = "TYP";
     inputNote.className = "note-input";
-    inputNote.setAttribute("list", "typy"); // przypisanie datalist
     inputNote.value = item.note || "";
+    inputNote.setAttribute("list", "typList");
 
     inputNote.oninput = () => {
       const val = inputNote.value.toUpperCase().trim();
@@ -206,13 +195,6 @@ function updateList() {
     codeText.className = "code-text";
     codeText.textContent = item.value;
 
-    const nokLabel = document.createElement("label");
-    nokLabel.style.display = "flex";
-    nokLabel.style.alignItems = "center";
-    nokLabel.style.gap = "4px";
-    nokLabel.style.fontSize = "0.9rem";
-    nokLabel.style.marginLeft = "auto";
-
     const nokCheckbox = document.createElement("input");
     nokCheckbox.type = "checkbox";
     nokCheckbox.checked = !!item.nok;
@@ -221,10 +203,13 @@ function updateList() {
     nokCheckbox.style.cursor = "pointer";
     nokCheckbox.onchange = () => {
       codes[index].nok = nokCheckbox.checked;
-      nokCheckbox.style.accentColor = nokCheckbox.checked ? "#ff4444" : "#00cc00";
     };
-    nokCheckbox.style.accentColor = nokCheckbox.checked ? "#ff4444" : "#00cc00";
 
+    const nokLabel = document.createElement("label");
+    nokLabel.style.display = "flex";
+    nokLabel.style.alignItems = "center";
+    nokLabel.style.gap = "4px";
+    nokLabel.style.marginLeft = "auto";
     nokLabel.appendChild(nokCheckbox);
     nokLabel.appendChild(document.createTextNode("NOK"));
 
@@ -260,14 +245,17 @@ function sendData() {
   const trasa = localStorage.getItem("trasa") || "";
   const tablica = localStorage.getItem("tablica") || "";
   const dodatkoweInfo = document.getElementById("dodatkoweInfo").value.trim();
+
   if (!login || !trasa || !tablica || codes.length === 0) {
     alert("Brakuje danych lub lista kodów jest pusta.");
     return;
   }
+
   if (!codes.every(c => c.note)) {
     alert("Wszystkie pola TYP muszą być uzupełnione.");
     return;
   }
+
   if (!confirm("Czy na pewno chcesz wysłać dane?")) return;
 
   const finalData = codes.map(c => {
@@ -288,17 +276,13 @@ function sendData() {
   })
   .then(res => res.text())
   .then(txt => {
-  alert("✅ Dane wysłane.");
-  codes = [];
-  updateList();
-
-  // Wyczyść trasa i tablica (ale NIE login!)
-  localStorage.removeItem("trasa");
-  localStorage.removeItem("tablica");
-
-  window.location.href = "index.html";
-})
-
+    alert("✅ Dane wysłane.");
+    codes = [];
+    updateList();
+    localStorage.removeItem("trasa");
+    localStorage.removeItem("tablica");
+    window.location.href = "index.html";
+  })
   .catch(err => {
     document.getElementById("status").innerText = "❌ Błąd: " + err;
   });
@@ -308,37 +292,44 @@ document.addEventListener("DOMContentLoaded", () => {
   const login = localStorage.getItem("login") || "brak";
   const trasa = localStorage.getItem("trasa") || "brak";
   const tablica = localStorage.getItem("tablica") || "brak";
-
   document.getElementById("daneUzytkownika").innerHTML = `${login}<br>${trasa}<br>${tablica}`;
 
   const html5Qr = new Html5Qrcode("reader");
-Html5Qrcode.getCameras().then(cameras => {
-  if (cameras && cameras.length) {
-    // Szukamy tylnej kamery
-    const backCam = cameras.find(cam =>
-      cam.label.toLowerCase().includes("back") || cam.label.toLowerCase().includes("rear")
-    );
 
-    const selectedCam = backCam ? backCam.id : cameras[0].id;
-
-    html5Qr.start(
-      selectedCam,
-      { fps: 10, qrbox: 250 },
-      text => {
+  Html5Qrcode.getCameras().then(cameras => {
+    if (cameras && cameras.length) {
+      const backCam = cameras.find(cam => cam.label.toLowerCase().includes("back")) || cameras[0];
+      html5Qr.start(backCam.id, { fps: 10, qrbox: 250 }, text => {
         if (!codes.find(c => c.value === text)) {
           codes.push({ value: text, note: "", nok: false });
           updateList();
           document.getElementById("scan-result").innerText = "Zeskanowano: " + text;
         }
-      }
-    );
-  } else {
-    document.getElementById("scan-result").innerText = "❌ Nie wykryto kamery.";
-  }
-}).catch(err => {
-  document.getElementById("scan-result").innerText = "❌ Błąd kamery: " + err;
+      });
+    } else {
+      document.getElementById("scan-result").innerText = "❌ Nie wykryto kamery.";
+    }
+  }).catch(err => {
+    document.getElementById("scan-result").innerText = "❌ Błąd kamery: " + err;
+  });
 });
-
 </script>
+
+<datalist id="typList">
+  <option value="FM">
+  <option value="FMB">
+  <option value="LQ">
+  <option value="LQB">
+  <option value="RQ">
+  <option value="RQB">
+  <option value="XS">
+  <option value="ODL">
+  <option value="ODR">
+  <option value="CU">
+  <option value="DUO">
+  <option value="HICU">
+  <option value="HIDUO">
+</datalist>
+
 </body>
 </html>
