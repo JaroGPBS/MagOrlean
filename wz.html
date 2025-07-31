@@ -247,9 +247,9 @@
         return;
       }
 
-      if (!codes.every(c => c.note)) {
-        alert("Wszystkie pola TYP muszą być uzupełnione.");
-        return;
+      if (!codes.every(c => typeof c.note === "string" && c.note.trim() !== "")) {
+      alert("Wszystkie pola TYP muszą być uzupełnione.");
+      return;
       }
 
       const finalData = codes.map(c => `${c.note} - ${c.value}`);
