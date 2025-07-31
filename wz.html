@@ -304,9 +304,11 @@
 
                // 📳 Wibracja
               if (navigator.vibrate) {
-              navigator.vibrate(100); // 100 ms
-            }
-          });
+        navigator.vibrate(100); // 100 ms
+      }
+    }
+  }
+);
         } else {
           document.getElementById("scan-result").innerText = "❌ Nie wykryto kamery.";
         }
