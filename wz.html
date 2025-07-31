@@ -21,7 +21,6 @@
       background: #333;
       padding: 20px;
       border-radius: 12px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.2);
       display: flex;
       flex-direction: column;
       justify-content: space-between;
@@ -31,28 +30,19 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 5px;
+      margin-bottom: 10px;
     }
     .logo {
-      font-family: 'Informal Roman', cursive;
-      color: #f9f9f9;
+      font-family: 'Caveat', cursive;
       font-size: 2.5rem;
-      margin-left: 40px;
     }
     .back-button {
-      width: 25%;
-      min-width: 80px;
       padding: 8px;
-      font-size: 0.9rem;
       border: none;
       border-radius: 6px;
       background-color: #555;
       color: #fff;
       cursor: pointer;
-      text-align: center;
-    }
-    .back-button:hover {
-      background-color: #777;
     }
     .data-display {
       font-size: 14px;
@@ -60,22 +50,6 @@
       padding: 10px;
       border-radius: 8px;
       margin-bottom: 20px;
-      text-align: left;
-    }
-    input, button {
-      width: 100%;
-      padding: 10px;
-      margin: 6px 0;
-      font-size: 1rem;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-    }
-    input {
-      background-color: #222;
-      color: #f5f5f5;
-    }
-    input::placeholder {
-      color: #999;
     }
     #reader {
       width: 100%;
@@ -86,6 +60,19 @@
       text-align: center;
       color: #00ff00;
       margin-bottom: 12px;
+    }
+    input, button {
+      width: 100%;
+      padding: 10px;
+      margin: 6px 0;
+      font-size: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      background-color: #222;
+      color: #f5f5f5;
+    }
+    input::placeholder {
+      color: #999;
     }
     ul {
       list-style: none;
@@ -99,25 +86,20 @@
       border-bottom: 1px solid #666;
     }
     .note-input {
-      width: 15%;
-      min-width: 50px;
+      width: 20%;
       padding: 6px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
       font-size: 0.9rem;
-      text-transform: uppercase;
       background-color: #1c1c1c;
       color: #f5f5f5;
+      text-transform: uppercase;
     }
     .code-text {
       flex: 1;
-      font-size: 0.95rem;
       word-break: break-word;
     }
     .remove-btn {
       color: red;
       cursor: pointer;
-      padding: 0 6px;
       font-weight: bold;
     }
     .footer-logo {
@@ -127,207 +109,209 @@
     .footer-logo img {
       width: 25%;
       max-width: 150px;
-      height: auto;
     }
-    @media screen and (max-width: 600px) {
-      .logo {
-        font-size: 2rem;
-      }
+    .checkbox-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 10px;
+      margin-bottom: 10px;
+    }
+    .checkbox-row label {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #444;
+      padding: 8px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .checkbox-row input {
+      width: 20px;
+      height: 20px;
     }
   </style>
 </head>
 <body>
-<div class="form-wrapper">
-  <div>
-    <div class="header-row">
-      <div class="logo">WuZetka</div>
-      <button class="back-button" onclick="goBack()">← Cofnij</button>
+  <div class="form-wrapper">
+    <div>
+      <div class="header-row">
+        <div class="logo">WuZetka</div>
+        <button class="back-button" onclick="goBack()">← Cofnij</button>
+      </div>
+
+      <div class="data-display" id="daneUzytkownika">Wczytywanie danych...</div>
+
+      <div id="reader"></div>
+      <div id="scan-result">Zeskanuj kod QR...</div>
+
+      <input type="text" id="manualInput" placeholder="Dodaj kod ręcznie" autocomplete="off">
+      <button onclick="addManual()">Dodaj do listy</button>
+
+      <h3>Lista kodów:</h3>
+      <ul id="codeList"></ul>
+
+      <input type="text" id="dodatkoweInfo" placeholder="Dodatkowe informacje (opcjonalne)" autocomplete="off">
+
+      <div class="checkbox-row">
+        <label><input type="radio" name="typDostawy" value="Załadunek"> Załadunek</label>
+        <label><input type="radio" name="typDostawy" value="Doładunek"> Doładunek</label>
+      </div>
+
+      <button onclick="sendData()">Wyślij dane</button>
+      <p id="status"></p>
     </div>
-    <div class="data-display" id="daneUzytkownika">Wczytywanie danych...</div>
-    <div id="reader"></div>
-    <div id="scan-result">Zeskanuj kod QR...</div>
 
-    <input type="text" id="manualInput" placeholder="Dodaj kod ręcznie" autocomplete="off">
-    <button onclick="addManual()">Dodaj do listy</button>
-
-    <h3>Lista kodów:</h3>
-    <ul id="codeList"></ul>
-
-    <!-- Checkboxy nad przyciskiem -->
-    <div style="margin: 10px 0; display: flex; justify-content: center; gap: 20px;">
-      <label style="display:flex;align-items:center;gap:6px;">
-        <input type="checkbox" id="zaladunek" onclick="toggleCheckbox('zaladunek')" style="width:18px;height:18px;">
-        Załadunek
-      </label>
-      <label style="display:flex;align-items:center;gap:6px;">
-        <input type="checkbox" id="doladunek" onclick="toggleCheckbox('doladunek')" style="width:18px;height:18px;">
-        Doładunek
-      </label>
+    <div class="footer-logo">
+      <p class="footer-text">Created by Jaro</p>
+      <img src="https://gpbs.pl/assets/images/xlogo_wh.png.pagespeed.ic.3FdfUvX7s-.webp" alt="Logo GPBS">
     </div>
-
-    <input type="text" id="dodatkoweInfo" placeholder="Dodatkowe informacje (opcjonalne)" autocomplete="off">
-    <button onclick="sendData()">Wyślij dane</button>
-    <p id="status"></p>
   </div>
 
-  <!-- Stopka z napisem i logo -->
-  <div class="footer-logo">
-    <p class="footer-text">Created by Jaro</p>
-    <img src="https://gpbs.pl/assets/images/xlogo_wh.png.pagespeed.ic.3FdfUvX7s-.webp" alt="Logo GPBS">
-  </div>
-</div>
-
-<script>
-function goBack() {
-  window.location.href = "index.html";
-}
-
-function toggleCheckbox(id) {
-  const z = document.getElementById("zaladunek");
-  const d = document.getElementById("doladunek");
-  if (id === "zaladunek" && z.checked) d.checked = false;
-  if (id === "doladunek" && d.checked) z.checked = false;
-}
-
-const scriptURL = "https://script.google.com/macros/s/AKfycbxO0JTvxZZgCiQBzLlDP4ZdBl781_QaAm1jM4Um7_EmhIvQ3iN3j2D3spJ3LLtlZ_qEPA/exec"; // <--- Zmień na swój Web App URL
-let codes = [];
-const allowed = ["FM", "LQ", "RQ", "XS", "ODL", "ODR", "CU", "DUO", "HICU", "HIDUO", "FMB", "LQB", "RQB"];
-
-function updateList() {
-  const list = document.getElementById("codeList");
-  list.innerHTML = "";
-  codes.forEach((item, index) => {
-    const li = document.createElement("li");
-    const inputNote = document.createElement("input");
-    inputNote.type = "text";
-    inputNote.placeholder = "TYP";
-    inputNote.className = "note-input";
-    inputNote.value = item.note || "";
-    inputNote.setAttribute("list", "typList");
-    inputNote.oninput = () => {
-      const val = inputNote.value.toUpperCase().trim();
-      inputNote.value = val;
-      codes[index].note = val;
-      inputNote.style.borderColor = allowed.includes(val) ? "#0f0" : "red";
-    };
-    const codeText = document.createElement("span");
-    codeText.className = "code-text";
-    codeText.textContent = item.value;
-    const remove = document.createElement("span");
-    remove.className = "remove-btn";
-    remove.textContent = "✕";
-    remove.onclick = () => removeCode(index);
-    li.appendChild(inputNote);
-    li.appendChild(codeText);
-    li.appendChild(remove);
-    list.appendChild(li);
-  });
-}
-
-function addManual() {
-  const val = document.getElementById("manualInput").value.trim();
-  if (val && !codes.find(c => c.value === val)) {
-    codes.push({ value: val, note: "" });
-    document.getElementById("manualInput").value = "";
-    updateList();
-  }
-}
-
-function removeCode(index) {
-  codes.splice(index, 1);
-  updateList();
-}
-
-function sendData() {
-  const login = localStorage.getItem("login") || "";
-  const trasa = localStorage.getItem("trasa") || "";
-  const tablica = localStorage.getItem("tablica") || "";
-  const dodatkowe = document.getElementById("dodatkoweInfo").value.trim();
-  const typDostawy = document.querySelector('input[name="typDostawy"]:checked')?.value || "";
-
-  if (!login || !trasa || !tablica || codes.length === 0 || !typDostawy) {
-    alert("Uzupełnij wszystkie dane i zaznacz typ dostawy.");
-    return;
-  }
-
-  if (!codes.every(c => c.note)) {
-    alert("Wszystkie pola TYP muszą być uzupełnione.");
-    return;
-  }
-
-  if (!confirm("Czy na pewno chcesz wysłać dane?")) return;
-
-  const finalData = codes.map(c => `${c.note.toUpperCase()} | ${c.value}`);
-
-  const formData = new FormData();
-  formData.append("strona", "wz");
-  formData.append("login", login);
-  formData.append("trasa", trasa);
-  formData.append("tablica", tablica);
-  formData.append("typDostawy", typDostawy);
-  formData.append("dodatkowe", dodatkowe || "-");
-  formData.append("kody", JSON.stringify(finalData));
-
-  fetch("https://script.google.com/macros/s/AKfycbyV9AfOiRfwMR-fueFzFwwgJHXQO1GG2R5yaNgr-mFwuyk535Nug0cbL7utM7RhDGpWZQ/exec", {
-    method: "POST",
-    body: formData
-  })
-  .then(res => res.text())
-  .then(txt => {
-    alert(txt);
-    codes = [];
-    updateList();
-    localStorage.removeItem("trasa");
-    localStorage.removeItem("tablica");
-    window.location.href = "index.html";
-  })
-  .catch(err => {
-    document.getElementById("status").innerText = "❌ Błąd: " + err;
-  });
-}
-
-
-document.addEventListener("DOMContentLoaded", () => {
-  const login = localStorage.getItem("login") || "brak";
-  const trasa = localStorage.getItem("trasa") || "brak";
-  const tablica = localStorage.getItem("tablica") || "brak";
-  document.getElementById("daneUzytkownika").innerHTML = `${login}<br>${trasa}<br>${tablica}`;
-
-  const html5Qr = new Html5Qrcode("reader");
-  Html5Qrcode.getCameras().then(cameras => {
-    if (cameras && cameras.length) {
-      const backCam = cameras.find(cam => cam.label.toLowerCase().includes("back")) || cameras[0];
-      html5Qr.start(backCam.id, { fps: 10, qrbox: 250 }, text => {
-        if (!codes.find(c => c.value === text)) {
-          codes.push({ value: text, note: "" });
-          updateList();
-          document.getElementById("scan-result").innerText = "Zeskanowano: " + text;
-        }
-      });
-    } else {
-      document.getElementById("scan-result").innerText = "❌ Nie wykryto kamery.";
+  <script>
+    function goBack() {
+      window.location.href = "index.html";
     }
-  }).catch(err => {
-    document.getElementById("scan-result").innerText = "❌ Błąd kamery: " + err;
-  });
-});
-</script>
 
-<datalist id="typList">
-  <option value="FM">
-  <option value="FMB">
-  <option value="LQ">
-  <option value="LQB">
-  <option value="RQ">
-  <option value="RQB">
-  <option value="XS">
-  <option value="ODL">
-  <option value="ODR">
-  <option value="CU">
-  <option value="DUO">
-  <option value="HICU">
-  <option value="HIDUO">
-</datalist>
+    const scriptURL = "https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec"; // ← Uzupełnij
+    let codes = [];
 
+    const allowed = ["FM", "LQ", "RQ", "XS", "ODL", "ODR", "CU", "DUO", "HICU", "HIDUO", "FMB", "LQB", "RQB"];
+
+    function updateList() {
+      const list = document.getElementById("codeList");
+      list.innerHTML = "";
+
+      codes.forEach((item, index) => {
+        const li = document.createElement("li");
+
+        const inputNote = document.createElement("input");
+        inputNote.type = "text";
+        inputNote.placeholder = "TYP";
+        inputNote.className = "note-input";
+        inputNote.value = item.note || "";
+        inputNote.setAttribute("list", "typList");
+
+        inputNote.oninput = () => {
+          const val = inputNote.value.toUpperCase().trim();
+          inputNote.value = val;
+          codes[index].note = val;
+          inputNote.style.borderColor = allowed.includes(val) ? "#0f0" : "red";
+        };
+
+        const codeText = document.createElement("span");
+        codeText.className = "code-text";
+        codeText.textContent = item.value;
+
+        const remove = document.createElement("span");
+        remove.className = "remove-btn";
+        remove.textContent = "✕";
+        remove.onclick = () => removeCode(index);
+
+        li.appendChild(inputNote);
+        li.appendChild(codeText);
+        li.appendChild(remove);
+        list.appendChild(li);
+      });
+    }
+
+    function addManual() {
+      const val = document.getElementById("manualInput").value.trim();
+      if (val && !codes.find(c => c.value === val)) {
+        codes.push({ value: val, note: "" });
+        document.getElementById("manualInput").value = "";
+        updateList();
+      }
+    }
+
+    function removeCode(index) {
+      codes.splice(index, 1);
+      updateList();
+    }
+
+    function sendData() {
+      const login = localStorage.getItem("login") || "";
+      const trasa = localStorage.getItem("trasa") || "";
+      const tablica = localStorage.getItem("tablica") || "";
+      const dodatkowe = document.getElementById("dodatkoweInfo").value.trim();
+
+      const typDostawy = document.querySelector('input[name="typDostawy"]:checked');
+      if (!typDostawy) {
+        alert("Wybierz typ dostawy: Załadunek lub Doładunek.");
+        return;
+      }
+
+      if (!login || !trasa || !tablica || codes.length === 0) {
+        alert("Brakuje danych lub lista kodów jest pusta.");
+        return;
+      }
+
+      if (!codes.every(c => c.note)) {
+        alert("Wszystkie pola TYP muszą być uzupełnione.");
+        return;
+      }
+
+      const finalData = codes.map(c => `${c.note} - ${c.value}`);
+
+      const formData = new FormData();
+      formData.append("login", login);
+      formData.append("trasa", trasa);
+      formData.append("tablica", tablica);
+      formData.append("dodatkowe", dodatkowe || "-");
+      formData.append("typDostawy", typDostawy.value);
+      formData.append("kody", JSON.stringify(finalData));
+      formData.append("strona", "wz"); // ← KLUCZOWE
+
+      fetch(scriptURL, {
+        method: "POST",
+        body: formData
+      })
+      .then(res => res.text())
+      .then(txt => {
+        alert("✅ Dane wysłane.");
+        codes = [];
+        updateList();
+        localStorage.removeItem("trasa");
+        localStorage.removeItem("tablica");
+        window.location.href = "index.html";
+      })
+      .catch(err => {
+        document.getElementById("status").innerText = "❌ Błąd: " + err;
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      const login = localStorage.getItem("login") || "brak";
+      const trasa = localStorage.getItem("trasa") || "brak";
+      const tablica = localStorage.getItem("tablica") || "brak";
+      document.getElementById("daneUzytkownika").innerHTML = `${login}<br>${trasa}<br>${tablica}`;
+
+      const html5Qr = new Html5Qrcode("reader");
+
+      Html5Qrcode.getCameras().then(cameras => {
+        if (cameras && cameras.length) {
+          const backCam = cameras.find(c => c.label.toLowerCase().includes("back")) || cameras[0];
+          html5Qr.start(backCam.id, { fps: 10, qrbox: 250 }, text => {
+            if (!codes.find(c => c.value === text)) {
+              codes.push({ value: text, note: "" });
+              updateList();
+              document.getElementById("scan-result").innerText = "Zeskanowano: " + text;
+            }
+          });
+        } else {
+          document.getElementById("scan-result").innerText = "❌ Nie wykryto kamery.";
+        }
+      }).catch(err => {
+        document.getElementById("scan-result").innerText = "❌ Błąd kamery: " + err;
+      });
+    });
+  </script>
+
+  <datalist id="typList">
+    <option value="FM"><option value="FMB"><option value="LQ"><option value="LQB"><option value="RQ">
+    <option value="RQB"><option value="XS"><option value="ODL"><option value="ODR">
+    <option value="CU"><option value="DUO"><option value="HICU"><option value="HIDUO">
+  </datalist>
 </body>
 </html>
