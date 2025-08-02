@@ -226,7 +226,7 @@ function updateList() {
 }
 
 function addManual() {
-  const val = document.getElementById("manualInput").value.trim();
+  const val = document.getElementById("manualInput").value.trim().toUpperCase();
   if (val && !codes.find(c => c.value === val)) {
     codes.push({ value: val, note: "", nok: false });
     document.getElementById("manualInput").value = "";
@@ -333,6 +333,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 </body>
 </html>
+
 
 
 
