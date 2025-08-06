@@ -1,3 +1,4 @@
+<!-- 👇 Wklej cały ten kod jako wz.html -->
 <!DOCTYPE html>
 <html lang="pl">
 <head>
@@ -90,7 +91,7 @@
       border-bottom: 1px solid #666;
     }
     .note-input {
-      width: 20%;
+      width: 30%;
       padding: 6px;
       font-size: 0.9rem;
       background-color: #1c1c1c;
@@ -99,7 +100,10 @@
     }
     .code-text {
       flex: 1;
-      word-break: break-word;
+      background-color: #1c1c1c;
+      color: #f5f5f5;
+      border: 1px solid #555;
+      padding: 6px;
     }
     .remove-btn {
       color: red;
@@ -178,9 +182,8 @@
       window.location.href = "index.html";
     }
 
-    const scriptURL = "https://script.google.com/macros/s/AKfycbxcfYMaeXTw2fg5D3zNmgyQiHHnRzqbPRUIPLKpsm_eBAXUTzWQ-oVn3nkAvutAHX601g/exec"; // ← Uzupełnij
+    const scriptURL = "https://script.google.com/macros/s/AKfycbxcfYMaeXTw2fg5D3zNmgyQiHHnRzqbPRUIPLKpsm_eBAXUTzWQ-oVn3nkAvutAHX601g/exec";
     let codes = [];
-
     const allowed = ["FM", "LQ", "RQ", "XS", "ODL", "ODR", "CU", "DUO", "HICU", "HIDUO", "FMB", "LQB", "RQB"];
 
     function updateList() {
@@ -202,22 +205,34 @@
           inputNote.value = val;
           codes[index].note = val;
           inputNote.style.borderColor = allowed.includes(val) ? "#0f0" : "red";
+          localStorage.setItem("codesWZ", JSON.stringify(codes));
         };
 
-        const codeText = document.createElement("span");
+        const codeText = document.createElement("input");
+        codeText.type = "text";
+        codeText.value = item.value;
         codeText.className = "code-text";
-        codeText.textContent = item.value;
+
+        codeText.oninput = () => {
+          codes[index].value = codeText.value.toUpperCase().trim();
+          localStorage.setItem("codesWZ", JSON.stringify(codes));
+        };
 
         const remove = document.createElement("span");
         remove.className = "remove-btn";
         remove.textContent = "✕";
-        remove.onclick = () => removeCode(index);
+        remove.onclick = () => {
+          codes.splice(index, 1);
+          updateList();
+        };
 
         li.appendChild(inputNote);
         li.appendChild(codeText);
         li.appendChild(remove);
         list.appendChild(li);
       });
+
+      localStorage.setItem("codesWZ", JSON.stringify(codes));
     }
 
     function addManual() {
@@ -229,63 +244,65 @@
       }
     }
 
-    function removeCode(index) {
-      codes.splice(index, 1);
-      updateList();
+    function sendData() {
+      if (!confirm("Czy na pewno chcesz wysłać dane?")) return;
+
+      const login = localStorage.getItem("login") || "";
+      const trasa = localStorage.getItem("trasa") || "";
+      const tablica = localStorage.getItem("tablica") || "";
+      const dodatkoweInfo = document.getElementById("dodatkoweInfo").value.trim();
+      const typDostawy = document.querySelector('input[name="typDostawy"]:checked')?.value || "";
+
+      if (!login || !trasa || !tablica || codes.length === 0 || !typDostawy) {
+        alert("Brakuje danych lub lista kodów jest pusta.");
+        return;
+      }
+
+      if (!codes.every(c => typeof c.note === "string" && c.note.trim() !== "")) {
+        alert("Wszystkie pola TYP muszą być uzupełnione.");
+        return;
+      }
+
+      const finalData = codes.map(c => {
+        const status = c.nok ? "NOK" : "OK";
+        return `${c.value} | ${c.note} | ${status}`;
+      });
+
+      const formData = new FormData();
+      formData.append("login", login);
+      formData.append("trasa", trasa);
+      formData.append("tablica", tablica);
+      formData.append("dodatkowe", dodatkoweInfo || "-");
+      formData.append("typDostawy", typDostawy);
+      formData.append("kody", JSON.stringify(finalData));
+      formData.append("strona", "wz");
+
+      fetch(scriptURL, {
+        method: "POST",
+        body: formData
+      })
+      .then(res => res.text())
+      .then(txt => {
+        alert("✅ Dane wysłane.");
+        codes = [];
+        localStorage.removeItem("codesWZ");
+        updateList();
+        localStorage.removeItem("trasa");
+        localStorage.removeItem("tablica");
+        window.location.href = "index.html";
+      })
+      .catch(err => {
+        document.getElementById("status").innerText = "❌ Błąd: " + err;
+      });
     }
 
-    function sendData() {
-  if (!confirm("Czy na pewno chcesz wysłać dane?")) return;
-
-  const login = localStorage.getItem("login") || "";
-  const trasa = localStorage.getItem("trasa") || "";
-  const tablica = localStorage.getItem("tablica") || "";
-  const dodatkoweInfo = document.getElementById("dodatkoweInfo").value.trim();
-  const typDostawy = document.querySelector('input[name="typDostawy"]:checked')?.value || "";
-
-  if (!login || !trasa || !tablica || codes.length === 0 || !typDostawy) {
-    alert("Brakuje danych lub lista kodów jest pusta.");
-    return;
-  }
-
-  if (!codes.every(c => typeof c.note === "string" && c.note.trim() !== "")) {
-    alert("Wszystkie pola TYP muszą być uzupełnione.");
-    return;
-  }
-
-  const finalData = codes.map(c => {
-    const status = c.nok ? "NOK" : "OK";
-    return `${c.value} | ${c.note} | ${status}`;
-  });
-
-  const formData = new FormData();
-  formData.append("login", login);
-  formData.append("trasa", trasa);
-  formData.append("tablica", tablica);
-  formData.append("dodatkowe", dodatkoweInfo || "-");
-  formData.append("typDostawy", typDostawy);
-  formData.append("kody", JSON.stringify(finalData));
-  formData.append("strona", "wz");
-
-  fetch(scriptURL, {
-    method: "POST",
-    body: formData
-  })
-    .then(res => res.text())
-    .then(txt => {
-      alert("✅ Dane wysłane.");
-      codes = [];
-      updateList();
-      localStorage.removeItem("trasa");
-      localStorage.removeItem("tablica");
-      window.location.href = "index.html";
-    })
-    .catch(err => {
-      document.getElementById("status").innerText = "❌ Błąd: " + err;
-    });
-}
-
     document.addEventListener("DOMContentLoaded", () => {
+      const savedCodes = localStorage.getItem("codesWZ");
+      if (savedCodes) {
+        codes = JSON.parse(savedCodes);
+        updateList();
+      }
+
       const login = localStorage.getItem("login") || "brak";
       const trasa = localStorage.getItem("trasa") || "brak";
       const tablica = localStorage.getItem("tablica") || "brak";
@@ -295,20 +312,15 @@
 
       Html5Qrcode.getCameras().then(cameras => {
         if (cameras && cameras.length) {
-          const backCam = cameras.find(c => c.label.toLowerCase().includes("back")) || cameras[0];
+          const backCam = cameras.find(cam => cam.label.toLowerCase().includes("back")) || cameras[0];
           html5Qr.start(backCam.id, { fps: 10, qrbox: 250 }, text => {
             if (!codes.find(c => c.value === text)) {
               codes.push({ value: text, note: "" });
               updateList();
               document.getElementById("scan-result").innerText = "Zeskanowano: " + text;
-
-               // 📳 Wibracja
-              if (navigator.vibrate) {
-        navigator.vibrate(100); // 100 ms
-      }
-    }
-  }
-);
+              if (navigator.vibrate) navigator.vibrate(100);
+            }
+          });
         } else {
           document.getElementById("scan-result").innerText = "❌ Nie wykryto kamery.";
         }
@@ -319,14 +331,19 @@
   </script>
 
   <datalist id="typList">
-    <option value="FM"><option value="FMB"><option value="LQ"><option value="LQB"><option value="RQ">
-    <option value="RQB"><option value="XS"><option value="ODL"><option value="ODR">
-    <option value="CU"><option value="DUO"><option value="HICU"><option value="HIDUO">
+    <option value="FM">
+    <option value="LQ">
+    <option value="RQ">
+    <option value="XS">
+    <option value="CU">
+    <option value="DUO">
+    <option value="HICU">
+    <option value="HIDUO">  
+    <option value="ODL">
+    <option value="ODR">
+    <option value="FMB">
+    <option value="LQB">
+    <option value="RQB">
   </datalist>
 </body>
 </html>
-
-
-
-
-
