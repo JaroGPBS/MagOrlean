@@ -190,9 +190,21 @@ function updateList() {
       inputNote.style.borderColor = allowed.includes(val) ? "#0f0" : "red";
     };
 
-    const codeText = document.createElement("span");
-    codeText.className = "code-text";
-    codeText.textContent = item.value;
+      const codeText = document.createElement("input");
+      codeText.type = "text";
+      codeText.value = item.value;
+      codeText.className = "code-text";
+      codeText.style.backgroundColor = "#1c1c1c";
+      codeText.style.color = "#f5f5f5";
+      codeText.style.border = "1px solid #555";
+      codeText.style.padding = "6px";
+      codeText.style.flex = "1";
+
+      codeText.oninput = () => {
+  codes[index].value = codeText.value.toUpperCase().trim();
+  localStorage.setItem("codesPZ", JSON.stringify(codes)); // aktualizacja pamięci
+};
+
 
     const nokCheckbox = document.createElement("input");
     nokCheckbox.type = "checkbox";
@@ -222,6 +234,7 @@ function updateList() {
     li.appendChild(nokLabel);
     li.appendChild(remove);
     list.appendChild(li);
+    localStorage.setItem("codesPZ", JSON.stringify(codes));
   });
 }
 
@@ -278,6 +291,7 @@ function sendData() {
   .then(txt => {
     alert("✅ Dane wysłane.");
     codes = [];
+    localStorage.removeItem("codesPZ");
     updateList();
     localStorage.removeItem("trasa");
     localStorage.removeItem("tablica");
@@ -289,6 +303,11 @@ function sendData() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+  const savedCodes = localStorage.getItem("codesPZ");
+  if (savedCodes) {
+    codes = JSON.parse(savedCodes);
+    updateList();
+  }
   const login = localStorage.getItem("login") || "brak";
   const trasa = localStorage.getItem("trasa") || "brak";
   const tablica = localStorage.getItem("tablica") || "brak";
@@ -320,12 +339,12 @@ document.addEventListener("DOMContentLoaded", () => {
   <option value="LQ">
   <option value="RQ">
   <option value="XS">
-  <option value="ODL">
-  <option value="ODR">
   <option value="CU">
   <option value="DUO">
   <option value="HICU">
   <option value="HIDUO">
+  <option value="ODL">
+  <option value="ODR">
   <option value="FMB">
   <option value="LQB">
   <option value="RQB">
@@ -333,6 +352,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 </body>
 </html>
+
 
 
 
