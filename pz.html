@@ -167,7 +167,7 @@ function goBack() {
 
 const scriptURL = "https://script.google.com/macros/s/AKfycbxcfYMaeXTw2fg5D3zNmgyQiHHnRzqbPRUIPLKpsm_eBAXUTzWQ-oVn3nkAvutAHX601g/exec";
 let codes = [];
-const allowed = ["FM", "LQ", "RQ", "XS", "ODL", "ODR", "CU", "DUO", "HICU", "HIDUO", "FMB", "LQB", "RQB"];
+const allowed = ["FM", "LQ", "RQ", "XS", "ODL", "ODR", "CU", "DUO", "HICU", "HIDUO", "FMB", "LQB", "RQB", "BQCD", "BQDUO", "BQSH"];
 
 function updateList() {
   const list = document.getElementById("codeList");
@@ -343,6 +343,9 @@ document.addEventListener("DOMContentLoaded", () => {
   <option value="DUO">
   <option value="HICU">
   <option value="HIDUO">
+  <option value="BQCD">
+  <option value="BQDUO">
+  <option value="BQSH">
   <option value="ODL">
   <option value="ODR">
   <option value="FMB">
@@ -352,6 +355,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 </body>
 </html>
+
 
 
 
