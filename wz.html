@@ -184,7 +184,7 @@
 
     const scriptURL = "https://script.google.com/macros/s/AKfycbxcfYMaeXTw2fg5D3zNmgyQiHHnRzqbPRUIPLKpsm_eBAXUTzWQ-oVn3nkAvutAHX601g/exec";
     let codes = [];
-    const allowed = ["FM", "LQ", "RQ", "XS", "ODL", "ODR", "CU", "DUO", "HICU", "HIDUO", "FMB", "LQB", "RQB"];
+const allowed = ["FM", "LQ", "RQ", "XS", "ODL", "ODR", "CU", "DUO", "HICU", "HIDUO", "FMB", "LQB", "RQB", "BQCD", "BQDUO", "BQSH"];
 
     function updateList() {
       const list = document.getElementById("codeList");
@@ -330,21 +330,26 @@
     });
   </script>
 
-  <datalist id="typList">
-    <option value="FM">
-    <option value="LQ">
-    <option value="RQ">
-    <option value="XS">
-    <option value="CU">
-    <option value="DUO">
-    <option value="HICU">
-    <option value="HIDUO">  
-    <option value="ODL">
-    <option value="ODR">
-    <option value="FMB">
-    <option value="LQB">
-    <option value="RQB">
-  </datalist>
+<datalist id="typList">
+  <option value="FM">
+  <option value="LQ">
+  <option value="RQ">
+  <option value="XS">
+  <option value="CU">
+  <option value="DUO">
+  <option value="HICU">
+  <option value="HIDUO">
+  <option value="BQCD">
+  <option value="BQDUO">
+  <option value="BQSH">
+  <option value="ODL">
+  <option value="ODR">
+  <option value="FMB">
+  <option value="LQB">
+  <option value="RQB">
+</datalist>
+
 </body>
 </html>
+
 
