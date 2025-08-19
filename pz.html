@@ -24,7 +24,6 @@
       box-shadow: 0 0 10px rgba(0,0,0,0.2);
       display: flex;
       flex-direction: column;
-      justify-content: space-between;
       min-height: 90vh;
     }
     .header-row {
@@ -99,10 +98,6 @@
       background-color: #1c1c1c; color: #f5f5f5; border: 1px solid #555; padding: 6px;
     }
     .remove-btn { color: red; cursor: pointer; padding: 0 6px; font-weight: bold; }
-    .footer-logo { text-align: center; margin-top: 20px; }
-    .footer-logo img { width: 25%; max-width: 150px; height: auto; }
-
-    @media screen and (max-width: 600px) { .logo { font-size: 2rem; } }
 
     .list-header { display:flex; align-items:center; gap:8px; }
     .badge {
@@ -110,15 +105,9 @@
       font-size:.85rem; background:#222; color:#f5f5f5;
     }
 
-    /* NOWY układ input + button Dodaj S/N */
-    .manual-row {
-      display: flex;
-      gap: 8px;
-      margin: 6px 0;
-    }
-    .manual-row input {
-      flex: 1;
-    }
+    /* Input ręczny + przycisk 15% po prawej */
+    .manual-row { display: flex; gap: 8px; margin: 6px 0; }
+    .manual-row input { flex: 1; }
     .manual-row button {
       flex: 0 0 15%;
       padding: 8px;
@@ -130,6 +119,13 @@
       cursor: pointer;
     }
     .manual-row button:hover { background: #777; }
+
+    /* Blok wysyłki na dole pod listą */
+    .send-block { margin-top: 14px; }
+    .footer-logo { text-align: center; margin-top: 20px; }
+    .footer-logo img { width: 25%; max-width: 150px; height: auto; }
+
+    @media screen and (max-width: 600px) { .logo { font-size: 2rem; } }
   </style>
 </head>
 <body>
@@ -149,7 +145,7 @@
     <div id="reader"></div>
     <div id="scan-result">Kliknij SKANOWANIE aby odczytać kod QR...</div>
 
-    <!-- Zmieniony układ -->
+    <!-- Ręczne dodawanie: input + przycisk 15% -->
     <div class="manual-row">
       <input type="text" id="manualInput" placeholder="Dodaj kod ręcznie" autocomplete="off">
       <button onclick="addManual()">Dodaj S/N</button>
@@ -161,9 +157,12 @@
     </div>
     <ul id="codeList"></ul>
 
-    <input type="text" id="dodatkoweInfo" placeholder="Dodatkowe informacje (opcjonalne)" autocomplete="off">
-    <button onclick="sendData()">Wyślij dane</button>
-    <p id="status"></p>
+    <!-- POD SPODEM: dodatkowe + wyślij -->
+    <div class="send-block">
+      <input type="text" id="dodatkoweInfo" placeholder="Dodatkowe informacje (opcjonalne)" autocomplete="off">
+      <button onclick="sendData()">Wyślij dane</button>
+      <p id="status"></p>
+    </div>
   </div>
 
   <div class="footer-logo">
@@ -174,7 +173,236 @@
 
 <script>
 function goBack() { window.location.href = "index.html"; }
-// ... (tu cały JS pozostaje taki jak w poprzedniej wersji – obsługa skanera, listy, wysyłki itd.)
+
+const allowed = [
+  "FM","LQ","RQ","XS","ODL","ODR","CU","DUO","HICU","HIDUO","HIUNO",
+  "FMB","LQB","RQB",
+  "FMBRBQ","ODBRBQ","CUBQ","DUOBQ"
+];
+
+const scriptURL = "https://script.google.com/macros/s/AKfycbzNy43SKVLV4iQNDwAT_FssmZRymhloaYAWFxWgMja1rCR0xJTmXaLU_yYbnvx2kq0Ukw/exec";
+
+let codes = []; // { value, note, nok }
+
+let audioCtx = null;
+function ensureAudio() {
+  if (!audioCtx) {
+    try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+    catch(e) { audioCtx = null; }
+  }
+}
+function playBeep() {
+  if (!audioCtx) return;
+  const o = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  o.type = "sine"; o.frequency.value = 880;
+  g.gain.value = 0.0001;
+  o.connect(g); g.connect(audioCtx.destination);
+  const now = audioCtx.currentTime;
+  g.gain.exponentialRampToValueAtTime(0.2, now + 0.01);
+  g.gain.exponentialRampToValueAtTime(0.0001, now + 0.18);
+  o.start(now); o.stop(now + 0.2);
+}
+function buzz() { if (navigator.vibrate) navigator.vibrate(50); }
+
+function saveCodes() { localStorage.setItem("codesPZ", JSON.stringify(codes)); }
+
+function updateList() {
+  const list = document.getElementById("codeList");
+  const count = document.getElementById("codeCount");
+  list.innerHTML = "";
+  count.textContent = String(codes.length);
+
+  codes.forEach((item, index) => {
+    const li = document.createElement("li");
+
+    const inputNote = document.createElement("input");
+    inputNote.type = "text";
+    inputNote.placeholder = "TYP";
+    inputNote.className = "note-input";
+    inputNote.value = item.note || "";
+    inputNote.setAttribute("list", "typList");
+    inputNote.style.borderColor = item.note && allowed.includes(item.note) ? "#0f0" : "#555";
+    inputNote.oninput = () => {
+      const val = inputNote.value.toUpperCase().trim();
+      inputNote.value = val;
+      codes[index].note = val;
+      inputNote.style.borderColor = allowed.includes(val) ? "#0f0" : "red";
+      saveCodes();
+    };
+
+    const codeText = document.createElement("input");
+    codeText.type = "text";
+    codeText.value = item.value;
+    codeText.className = "code-text";
+    codeText.oninput = () => {
+      codes[index].value = codeText.value.toUpperCase().trim();
+      saveCodes();
+    };
+
+    const nokCheckbox = document.createElement("input");
+    nokCheckbox.type = "checkbox";
+    nokCheckbox.checked = !!item.nok;
+    nokCheckbox.style.width = "18px";
+    nokCheckbox.style.height = "18px";
+    nokCheckbox.style.cursor = "pointer";
+    nokCheckbox.onchange = () => {
+      codes[index].nok = nokCheckbox.checked;
+      saveCodes();
+    };
+
+    const nokLabel = document.createElement("label");
+    nokLabel.style.display = "flex";
+    nokLabel.style.alignItems = "center";
+    nokLabel.style.gap = "4px";
+    nokLabel.style.marginLeft = "auto";
+    /* USUNIĘTO: zmniejszanie czcionki NOK */
+    nokLabel.appendChild(nokCheckbox);
+    nokLabel.appendChild(document.createTextNode("NOK"));
+
+    const remove = document.createElement("span");
+    remove.className = "remove-btn";
+    remove.textContent = "✕";
+    remove.title = "Usuń";
+    remove.onclick = () => removeCode(index);
+
+    li.appendChild(inputNote);
+    li.appendChild(codeText);
+    li.appendChild(nokLabel);
+    li.appendChild(remove);
+    list.appendChild(li);
+  });
+}
+
+function addManual() {
+  const input = document.getElementById("manualInput");
+  const val = input.value.trim().toUpperCase();
+  if (!val) return;
+  const exists = codes.find(c => (c.value || "").toUpperCase().trim() === val);
+  if (!exists) {
+    codes.unshift({ value: val, note: "", nok: false });
+    saveCodes();
+    updateList();
+    playBeep(); buzz();
+  }
+  input.value = "";
+}
+
+function removeCode(index) {
+  codes.splice(index, 1);
+  saveCodes();
+  updateList();
+}
+
+/* SKAN – jeden klik = jeden skan */
+let html5Qr = null;
+let selectedCamId = null;
+
+async function pickBackCamera() {
+  const cams = await Html5Qrcode.getCameras();
+  if (!cams || !cams.length) throw new Error("Nie wykryto kamery.");
+  const back = cams.find(c => (c.label || "").toLowerCase().includes("back")
+                           || (c.label || "").toLowerCase().includes("environment"));
+  return (back || cams[0]).id;
+}
+
+async function stopScanner() {
+  if (!html5Qr) return;
+  try { await html5Qr.stop(); await html5Qr.clear(); } catch(e) {}
+}
+
+async function scanOnce() {
+  ensureAudio();
+  if (!html5Qr) html5Qr = new Html5Qrcode("reader");
+  if (!selectedCamId) selectedCamId = await pickBackCamera();
+
+  try {
+    await html5Qr.start(
+      selectedCamId,
+      { fps: 10, qrbox: 250, aspectRatio: 1.777 },
+      text => {
+        const val = (text || "").toUpperCase().trim();
+        if (!val) return;
+        const exists = codes.find(c => (c.value || "").toUpperCase().trim() === val);
+        if (!exists) {
+          codes.unshift({ value: val, note: "", nok: false });
+          saveCodes(); updateList();
+          document.getElementById("scan-result").innerText = "Zeskanowano: " + val;
+          playBeep(); buzz();
+          const sr = document.getElementById("scan-result");
+          sr.style.transition = "background-color .15s";
+          sr.style.backgroundColor = "#1e3a1e";
+          setTimeout(() => sr.style.backgroundColor = "transparent", 180);
+        }
+        stopScanner(); // zatrzymaj po 1 odczycie
+      },
+      () => {}
+    );
+  } catch (e) {
+    document.getElementById("scan-result").innerText = "❌ " + e;
+  }
+}
+document.getElementById("scanOnceBtn").addEventListener("click", scanOnce);
+
+function sendData() {
+  const login = localStorage.getItem("login") || "";
+  const trasa = localStorage.getItem("trasa") || "";
+  const tablica = localStorage.getItem("tablica") || "";
+  const dodatkoweInfo = document.getElementById("dodatkoweInfo").value.trim();
+
+  if (!login || !trasa || !tablica || codes.length === 0) {
+    alert("Brakuje danych lub lista kodów jest pusta.");
+    return;
+  }
+  if (!codes.every(c => c.note)) {
+    alert("Wszystkie pola TYP muszą być uzupełnione.");
+    return;
+  }
+  if (!confirm("Czy na pewno chcesz wysłać dane?")) return;
+
+  const finalData = codes.map(c => `${c.value} | ${c.note} | ${c.nok ? "NOK" : "OK"}`);
+
+  const formData = new FormData();
+  formData.append("login", login);
+  formData.append("trasa", trasa);
+  formData.append("tablica", tablica);
+  formData.append("dodatkowe", dodatkoweInfo || "-");
+  formData.append("kody", JSON.stringify(finalData));
+  formData.append("strona", "pz");
+
+  fetch(scriptURL, { method: "POST", body: formData })
+    .then(res => res.text())
+    .then(txt => {
+      alert("✅ Dane wysłane.");
+      codes = [];
+      localStorage.removeItem("codesPZ");
+      updateList();
+      localStorage.removeItem("trasa");
+      localStorage.removeItem("tablica");
+      stopScanner();
+      window.location.href = "index.html";
+    })
+    .catch(err => {
+      document.getElementById("status").innerText = "❌ Błąd: " + err;
+    });
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  try {
+    const savedCodes = localStorage.getItem("codesPZ");
+    if (savedCodes) codes = JSON.parse(savedCodes) || [];
+  } catch { codes = []; }
+  updateList();
+
+  const login = localStorage.getItem("login") || "brak";
+  const trasa = localStorage.getItem("trasa") || "brak";
+  const tablica = localStorage.getItem("tablica") || "brak";
+
+  document.getElementById("daneUzytkownika").innerHTML = `
+    <div><strong>${login}</strong></div>
+    <div>${trasa} – ${tablica}</div>
+  `;
+});
 </script>
 
 <datalist id="typList">
