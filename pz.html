@@ -73,7 +73,12 @@
     input::placeholder { color: #999; }
 
     /* Skaner */
-    #reader { width: 100%; max-width: 400px; margin: 12px auto; }
+    #reader {
+      width: 100%;
+      max-width: 400px;
+      margin: 12px auto;
+      aspect-ratio: 1 / 1; /* KWADRATOWY podgląd */
+    }
     #scan-result { text-align: center; color: #00ff00; margin-bottom: 12px; min-height: 1.2em; }
     .cam-controls { display: flex; gap: 8px; margin-bottom: 6px; }
     .cam-controls button { flex: 1; cursor: pointer; background:#555; color:#fff; }
@@ -107,7 +112,7 @@
       font-size:.85rem; background:#222; color:#f5f5f5;
     }
 
-    /* Input ręczny + przycisk 15% */
+    /* Ręczne dodawanie: input + przycisk 15% */
     .manual-row { display: flex; gap: 8px; margin: 6px 0; }
     .manual-row input { flex: 1; }
     .manual-row button {
@@ -122,7 +127,7 @@
     }
     .manual-row button:hover { background: #777; }
 
-    /* Dodatkowe informacje + Wyślij dane: JEDEN POD DRUGIM */
+    /* Dodatkowe informacje + Wyślij dane: jeden pod drugim */
     .extra-row {
       display: flex;
       flex-direction: column;
@@ -260,7 +265,7 @@ function updateList() {
       saveCodes();
     };
 
-    // NOK (normalny rozmiar czcionki)
+    // NOK
     const nokCheckbox = document.createElement("input");
     nokCheckbox.type = "checkbox";
     nokCheckbox.checked = !!item.nok;
@@ -315,17 +320,8 @@ function removeCode(index) {
   updateList();
 }
 
-/* SKAN – jeden klik = jeden skan, okno KWADRAT 220x220 */
+/* SKAN – jeden klik = jeden skan, KWADRAT 250x250 */
 let html5Qr = null;
-let selectedCamId = null;
-
-async function pickBackCamera() {
-  const cams = await Html5Qrcode.getCameras();
-  if (!cams || !cams.length) throw new Error("Nie wykryto kamery.");
-  const back = cams.find(c => (c.label || "").toLowerCase().includes("back")
-                           || (c.label || "").toLowerCase().includes("environment"));
-  return (back || cams[0]).id;
-}
 
 async function stopScanner() {
   if (!html5Qr) return;
@@ -333,36 +329,54 @@ async function stopScanner() {
 }
 
 async function scanOnce() {
-  ensureAudio(); // aktywacja audio po interakcji (mobile)
-  if (!html5Qr) html5Qr = new Html5Qrcode("reader");
-  if (!selectedCamId) selectedCamId = await pickBackCamera();
+  ensureAudio(); // aktywuj audio po interakcji (mobile)
 
   try {
+    const cameras = await Html5Qrcode.getCameras();
+    if (!cameras.length) {
+      document.getElementById("scan-result").innerText = "❌ Brak kamery";
+      return;
+    }
+
+    const backCam = cameras.find(c =>
+      (c.label || "").toLowerCase().includes("back") ||
+      (c.label || "").toLowerCase().includes("environment")
+    ) || cameras[0];
+
+    if (!html5Qr) html5Qr = new Html5Qrcode("reader");
+
     await html5Qr.start(
-      selectedCamId,
+      backCam.id,
       { fps: 10, qrbox: { width: 250, height: 250 } }, // KWADRAT
       text => {
         const val = (text || "").toUpperCase().trim();
         if (!val) return;
+
         const exists = codes.find(c => (c.value || "").toUpperCase().trim() === val);
         if (!exists) {
           codes.unshift({ value: val, note: "", nok: false });
-          saveCodes(); updateList();
-          document.getElementById("scan-result").innerText = "Zeskanowano: " + val;
-          playBeep(); buzz();
+          saveCodes();
+          updateList();
+
           const sr = document.getElementById("scan-result");
+          sr.innerText = "Zeskanowano: " + val;
+          playBeep();
+          buzz();
+
           sr.style.transition = "background-color .15s";
           sr.style.backgroundColor = "#1e3a1e";
           setTimeout(() => sr.style.backgroundColor = "transparent", 180);
         }
+
         stopScanner(); // zatrzymaj po 1 odczycie
       },
-      () => {} // ignoruj błędy klatkowe
+      () => {} // ignoruj błędy klatek
     );
   } catch (e) {
     document.getElementById("scan-result").innerText = "❌ " + e;
   }
 }
+
 document.getElementById("scanOnceBtn").addEventListener("click", scanOnce);
 
 /* Wysyłka */
@@ -399,7 +413,6 @@ function sendData() {
       codes = [];
       localStorage.removeItem("codesPZ");
       updateList();
-      // zostawiam login, czyścimy trasę i tablicę (tak chciałeś wcześniej)
       localStorage.removeItem("trasa");
       localStorage.removeItem("tablica");
       stopScanner();
@@ -453,4 +466,3 @@ document.addEventListener("DOMContentLoaded", () => {
 
 </body>
 </html>
-
