@@ -51,17 +51,19 @@
       cursor: pointer;
       text-align: center;
     }
-    .back-button:hover {
-      background-color: #777;
-    }
+    .back-button:hover { background-color: #777; }
+
+    /* Prost y styl danych – mniejsza czcionka + jedna linia */
     .data-display {
-      font-size: 11px;
+      font-size: 0.9rem;
       background-color: #444;
       padding: 10px;
       border-radius: 8px;
-      margin-bottom: 20px;
+      margin-bottom: 12px;
       text-align: left;
+      line-height: 1.4;
     }
+
     input, button {
       width: 100%;
       padding: 10px;
@@ -70,27 +72,31 @@
       border: 1px solid #555;
       border-radius: 4px;
     }
-    input {
-      background-color: #222;
-      color: #f5f5f5;
-    }
+    input { background-color: #222; color: #f5f5f5; }
     input::placeholder { color: #999; }
-    #reader { width: 100%; max-width: 400px; margin: 16px auto; }
+
+    /* Kontener na skaner + przycisk */
+    #reader { width: 100%; max-width: 400px; margin: 12px auto; }
     #scan-result { text-align: center; color: #00ff00; margin-bottom: 12px; }
+
+    .cam-controls { display: flex; gap: 8px; margin-bottom: 6px; }
+    .cam-controls button { flex: 1; cursor: pointer; background:#555; color:#fff; }
+    .cam-status { text-align:center; font-size:.9rem; color:#ccc; margin-bottom: 8px; }
+
     ul { list-style: none; padding: 0; }
     li {
       display: flex; align-items: center; gap: 8px;
       padding: 6px 0; border-bottom: 1px solid #666;
     }
     .note-input {
-      width: 15%; 
-      min-width: 40px; 
+      width: 20%;
+      min-width: 40px;
       padding: 4px;
-      border: 1px solid #555; 
-      border-radius: 4px; 
+      border: 1px solid #555;
+      border-radius: 4px;
       font-size: 0.7rem;
-      text-transform: uppercase; 
-      background-color: #1c1c1c; 
+      text-transform: uppercase;
+      background-color: #1c1c1c;
       color: #f5f5f5;
     }
     .code-text {
@@ -100,9 +106,7 @@
     .remove-btn { color: red; cursor: pointer; padding: 0 6px; font-weight: bold; }
     .footer-logo { text-align: center; margin-top: 20px; }
     .footer-logo img { width: 25%; max-width: 150px; height: auto; }
-    @media screen and (max-width: 600px) {
-      .logo { font-size: 2rem; }
-    }
+    @media screen and (max-width: 600px) { .logo { font-size: 2rem; } }
     .list-header { display:flex; align-items:center; gap:8px; }
     .badge {
       display:inline-block; padding:2px 8px; border:1px solid #666; border-radius:999px;
@@ -119,8 +123,15 @@
     </div>
 
     <div class="data-display" id="daneUzytkownika">Wczytywanie danych...</div>
+
+    <!-- PRZYCISK: skan jednorazowy -->
+    <div class="cam-controls">
+      <button id="scanOnceBtn">📷 SKANOWANIE</button>
+    </div>
+    <div class="cam-status" id="camStatus">Skaner nieaktywny.</div>
+
     <div id="reader"></div>
-    <div id="scan-result">Zeskanuj kod QR...</div>
+    <div id="scan-result">Kliknij SKANOWANIE aby odczytać kod QR...</div>
 
     <input type="text" id="manualInput" placeholder="Dodaj kod ręcznie" autocomplete="off">
     <button onclick="addManual()">Dodaj do listy</button>
@@ -143,21 +154,43 @@
 </div>
 
 <script>
-function goBack() {
-  window.location.href = "index.html";
-}
+function goBack() { window.location.href = "index.html"; }
 
-// lista dozwolonych typów
+// DOZWOLONE typy
 const allowed = [
-  "FM","LQ","RQ","XS","ODL","ODR","CU","DUO","HICU","HIDUO","HIUNO","FMB","LQB","RQB","FMBRBQ","ODBRBQ","CUBQ","DUOBQ"
+  "FM","LQ","RQ","XS","ODL","ODR","CU","DUO","HICU","HIDUO","HIUNO",
+  "FMB","LQB","RQB",
+  "FMBRBQ","ODBRBQ","CUBQ","DUOBQ"
 ];
 
 const scriptURL = "https://script.google.com/macros/s/AKfycbzNy43SKVLV4iQNDwAT_FssmZRymhloaYAWFxWgMja1rCR0xJTmXaLU_yYbnvx2kq0Ukw/exec";
+
 let codes = []; // [{ value, note, nok }], najnowszy na indeksie 0
 
-function saveCodes() {
-  localStorage.setItem("codesPZ", JSON.stringify(codes));
+// WebAudio „beep” – tworzymy po pierwszej interakcji (mobile)
+let audioCtx = null;
+function ensureAudio() {
+  if (!audioCtx) {
+    try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+    catch(e) { audioCtx = null; }
+  }
 }
+function playBeep() {
+  if (!audioCtx) return;
+  const o = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  o.type = "sine";
+  o.frequency.value = 880;
+  g.gain.value = 0.0001;
+  o.connect(g); g.connect(audioCtx.destination);
+  const now = audioCtx.currentTime;
+  g.gain.exponentialRampToValueAtTime(0.2, now + 0.01);
+  g.gain.exponentialRampToValueAtTime(0.0001, now + 0.18);
+  o.start(now); o.stop(now + 0.2);
+}
+function buzz() { if (navigator.vibrate) navigator.vibrate(50); }
+
+function saveCodes() { localStorage.setItem("codesPZ", JSON.stringify(codes)); }
 
 function updateList() {
   const list = document.getElementById("codeList");
@@ -174,9 +207,7 @@ function updateList() {
     inputNote.className = "note-input";
     inputNote.value = item.note || "";
     inputNote.setAttribute("list", "typList");
-    // kolor obramowania zgodnie z allowed
     inputNote.style.borderColor = item.note && allowed.includes(item.note) ? "#0f0" : "#555";
-
     inputNote.oninput = () => {
       const val = inputNote.value.toUpperCase().trim();
       inputNote.value = val;
@@ -210,6 +241,7 @@ function updateList() {
     nokLabel.style.alignItems = "center";
     nokLabel.style.gap = "4px";
     nokLabel.style.marginLeft = "auto";
+    nokLabel.style.fontSize = "0.75rem"; // mniejsza czcionka NOK
     nokLabel.appendChild(nokCheckbox);
     nokLabel.appendChild(document.createTextNode("NOK"));
 
@@ -234,10 +266,10 @@ function addManual() {
 
   const exists = codes.find(c => (c.value || "").toUpperCase().trim() === val);
   if (!exists) {
-    // najnowszy na górze
     codes.unshift({ value: val, note: "", nok: false });
     saveCodes();
     updateList();
+    playBeep(); buzz();
   }
   input.value = "";
 }
@@ -248,6 +280,61 @@ function removeCode(index) {
   updateList();
 }
 
+// ---- SKANOWANIE: 1 klik = 1 skan ----
+let html5Qr = null;
+let selectedCamId = null;
+
+async function pickBackCamera() {
+  const cams = await Html5Qrcode.getCameras();
+  if (!cams || !cams.length) throw new Error("Nie wykryto kamery.");
+  const back = cams.find(c => (c.label || "").toLowerCase().includes("back")
+                           || (c.label || "").toLowerCase().includes("environment"));
+  return (back || cams[0]).id;
+}
+
+async function stopScanner() {
+  if (!html5Qr) return;
+  try { await html5Qr.stop(); await html5Qr.clear(); } catch(e) {}
+  document.getElementById("camStatus").textContent = "Skaner nieaktywny.";
+}
+
+async function scanOnce() {
+  ensureAudio(); // wymagana interakcja na mobile
+  document.getElementById("camStatus").textContent = "Uruchamiam aparat...";
+  if (!html5Qr) html5Qr = new Html5Qrcode("reader");
+  if (!selectedCamId) selectedCamId = await pickBackCamera();
+
+  try {
+    await html5Qr.start(
+      selectedCamId,
+      { fps: 10, qrbox: 250, aspectRatio: 1.777 },
+      text => {
+        const val = (text || "").toUpperCase().trim();
+        if (!val) return;
+        const exists = codes.find(c => (c.value || "").toUpperCase().trim() === val);
+        if (!exists) {
+          codes.unshift({ value: val, note: "", nok: false });
+          saveCodes(); updateList();
+          document.getElementById("scan-result").innerText = "Zeskanowano: " + val;
+          playBeep(); buzz();
+          const sr = document.getElementById("scan-result");
+          sr.style.transition = "background-color .15s";
+          sr.style.backgroundColor = "#1e3a1e";
+          setTimeout(() => sr.style.backgroundColor = "transparent", 180);
+        }
+        stopScanner(); // ⛔ zatrzymaj po 1 odczycie
+      },
+      () => {} // onScanFailure – ignorujemy
+    );
+    document.getElementById("camStatus").textContent = "Skanowanie...";
+  } catch (e) {
+    document.getElementById("camStatus").textContent = "❌ " + e;
+  }
+}
+
+document.getElementById("scanOnceBtn").addEventListener("click", scanOnce);
+
+// ---- Wysyłka ----
 function sendData() {
   const login = localStorage.getItem("login") || "";
   const trasa = localStorage.getItem("trasa") || "";
@@ -258,18 +345,13 @@ function sendData() {
     alert("Brakuje danych lub lista kodów jest pusta.");
     return;
   }
-
   if (!codes.every(c => c.note)) {
     alert("Wszystkie pola TYP muszą być uzupełnione.");
     return;
   }
-
   if (!confirm("Czy na pewno chcesz wysłać dane?")) return;
 
-  const finalData = codes.map(c => {
-    const status = c.nok ? "NOK" : "OK";
-    return `${c.value} | ${c.note} | ${status}`;
-  });
+  const finalData = codes.map(c => `${c.value} | ${c.note} | ${c.nok ? "NOK" : "OK"}`);
 
   const formData = new FormData();
   formData.append("login", login);
@@ -288,6 +370,7 @@ function sendData() {
       updateList();
       localStorage.removeItem("trasa");
       localStorage.removeItem("tablica");
+      stopScanner();
       window.location.href = "index.html";
     })
     .catch(err => {
@@ -297,46 +380,22 @@ function sendData() {
 
 document.addEventListener("DOMContentLoaded", () => {
   const savedCodes = localStorage.getItem("codesPZ");
-  if (savedCodes) {
-    // zachowujemy kolejność tak, by index 0 był najnowszy
-    codes = JSON.parse(savedCodes);
-  }
+  if (savedCodes) codes = JSON.parse(savedCodes);
   updateList();
 
   const login = localStorage.getItem("login") || "brak";
   const trasa = localStorage.getItem("trasa") || "brak";
   const tablica = localStorage.getItem("tablica") || "brak";
-  document.getElementById("daneUzytkownika").innerHTML = `${login}<br>${trasa} - ${tablica}`;
 
-  const html5Qr = new Html5Qrcode("reader");
-
-  Html5Qrcode.getCameras().then(cameras => {
-    if (cameras && cameras.length) {
-      const backCam = cameras.find(cam => {
-        const lbl = (cam.label || "").toLowerCase();
-        return lbl.includes("back") || lbl.includes("environment");
-      }) || cameras[0];
-
-      html5Qr.start(backCam.id, { fps: 10, qrbox: 250 }, text => {
-        const val = (text || "").toUpperCase().trim();
-        const exists = codes.find(c => (c.value || "").toUpperCase().trim() === val);
-        if (!exists && val) {
-          // najnowszy na górze
-          codes.unshift({ value: val, note: "", nok: false });
-          saveCodes();
-          updateList();
-          document.getElementById("scan-result").innerText = "Zeskanowano: " + val;
-        }
-      });
-    } else {
-      document.getElementById("scan-result").innerText = "❌ Nie wykryto kamery.";
-    }
-  }).catch(err => {
-    document.getElementById("scan-result").innerText = "❌ Błąd kamery: " + err;
-  });
+  // Jedna linia: TRASA – TABLICE
+  document.getElementById("daneUzytkownika").innerHTML = `
+    <div><strong>${login}</strong></div>
+    <div>${trasa} – ${tablica}</div>
+  `;
 });
 </script>
 
+<!-- LISTA typów dla podpowiedzi -->
 <datalist id="typList">
   <option value="FM">
   <option value="LQ">
@@ -360,12 +419,3 @@ document.addEventListener("DOMContentLoaded", () => {
 
 </body>
 </html>
-
-
-
-
-
-
-
-
-
