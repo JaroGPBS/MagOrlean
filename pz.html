@@ -340,7 +340,7 @@ async function scanOnce() {
   try {
     await html5Qr.start(
       selectedCamId,
-      { fps: 10, qrbox: { width: 220, height: 220 } }, // KWADRAT
+      { fps: 10, qrbox: { width: 250, height: 250 } }, // KWADRAT
       text => {
         const val = (text || "").toUpperCase().trim();
         if (!val) return;
@@ -453,3 +453,4 @@ document.addEventListener("DOMContentLoaded", () => {
 
 </body>
 </html>
+
