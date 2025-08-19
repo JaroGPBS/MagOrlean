@@ -147,10 +147,9 @@ function goBack() {
   window.location.href = "index.html";
 }
 
-// NOWA lista dozwolonych typów (zamiany + dodanie BQCUI)
+// lista dozwolonych typów
 const allowed = [
-  "FM","LQ","RQ","XS","ODL","ODR","CU","DUO","HICU","HIDUO","FMB","LQB","RQB",
-  "BQCUO","BQEXO","BQEXI","BQCUI" // <-- nowe/zmienione
+  "FM","LQ","RQ","XS","ODL","ODR","CU","DUO","HICU","HIDUO","HIUNO","FMB","LQB","RQB","FMBRBQ","ODBRBQ","CUBQ","DUOBQ"
 ];
 
 const scriptURL = "https://script.google.com/macros/s/AKfycbzNy43SKVLV4iQNDwAT_FssmZRymhloaYAWFxWgMja1rCR0xJTmXaLU_yYbnvx2kq0Ukw/exec";
@@ -338,7 +337,6 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 </script>
 
-<!-- Zaktualizowana lista typów -->
 <datalist id="typList">
   <option value="FM">
   <option value="LQ">
@@ -348,20 +346,21 @@ document.addEventListener("DOMContentLoaded", () => {
   <option value="DUO">
   <option value="HICU">
   <option value="HIDUO">
-  <option value="BQCUO">
-  <option value="BQEXO">
-  <option value="BQCUI">
-  <option value="BQEXI">
+  <option value="HIUNO">
   <option value="ODL">
   <option value="ODR">
   <option value="FMB">
   <option value="LQB">
   <option value="RQB">
-
+  <option value="FMBRBQ">
+  <option value="ODBRBQ">
+  <option value="CUBQ">
+  <option value="DUOBQ">
 </datalist>
 
 </body>
 </html>
+
 
 
 
