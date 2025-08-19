@@ -72,13 +72,8 @@
       border-radius: 4px;
     }
 
-    input.uppercase {
-      text-transform: uppercase;
-    }
-
-    .hidden {
-      display: none;
-    }
+    input.uppercase { text-transform: uppercase; }
+    .hidden { display: none; }
 
     .buttons {
       display: flex;
@@ -97,9 +92,7 @@
       cursor: pointer;
       transition: background-color 0.2s;
     }
-    .buttons button:hover {
-      background-color: #888;
-    }
+    .buttons button:hover { background-color: #888; }
 
     .logout-btn {
       background-color: #aa3333;
@@ -136,7 +129,7 @@
       </div>
 
       <!-- Logowanie -->
-      <input type="password" id="kod" placeholder="Kod pracownika" required>
+      <input type="password" id="kod" placeholder="Kod pracownika" required autocomplete="off">
       <button onclick="checkLogin()">Zaloguj</button>
 
       <!-- Sekcja po zalogowaniu -->
@@ -144,7 +137,8 @@
         <p>Witaj, <strong id="user-name"></strong>!</p>
 
         <input type="text" id="trasa" class="uppercase" placeholder="NR TRASY" required autocomplete="off">
-        <input type="text" id="tablica" class="uppercase" placeholder="TABLICA REJESTRACYJNA" required autocomplete="off">
+        <input type="text" id="tablicaSam" class="uppercase" placeholder="TABLICA REJESTRACYJNA SAMOCHODU" required autocomplete="off">
+        <input type="text" id="tablicaNacz" class="uppercase" placeholder="TABLICA REJESTRACYJNA NACZEPY" required autocomplete="off">
 
         <div class="buttons">
           <button onclick="goTo('pz.html')">Przyjęcie</button>
@@ -186,17 +180,25 @@
 
     function goTo(destination) {
       const trasa = document.getElementById("trasa").value.trim().toUpperCase();
-      const tablica = document.getElementById("tablica").value.trim().toUpperCase();
+      const tablicaSam = document.getElementById("tablicaSam").value.trim().toUpperCase();
+      const tablicaNacz = document.getElementById("tablicaNacz").value.trim().toUpperCase();
 
-      if (!trasa || !tablica) {
+      if (!trasa || !tablicaSam || !tablicaNacz) {
         alert("Proszę uzupełnić wszystkie pola.");
         return;
       }
 
-      localStorage.setItem("trasa", trasa);
-      localStorage.setItem("tablica", tablica);
+      // połączona wartość SAMOCHÓD / NACZEPA
+      const tablicaCombined = `${tablicaSam} / ${tablicaNacz}`;
 
-      const url = `${destination}?trasa=${encodeURIComponent(trasa)}&tablica=${encodeURIComponent(tablica)}`;
+      // zapisy w localStorage (zgodność wstecz + wygoda uzupełniania pól)
+      localStorage.setItem("trasa", trasa);
+      localStorage.setItem("tablica", tablicaCombined);   // tu przechowujemy połączoną wartość
+      localStorage.setItem("tablicaSam", tablicaSam);     // osobno samochód
+      localStorage.setItem("tablicaNacz", tablicaNacz);   // osobno naczepa
+
+      // przekazujemy połączoną wartość jako ?tablica=...
+      const url = `${destination}?trasa=${encodeURIComponent(trasa)}&tablica=${encodeURIComponent(tablicaCombined)}`;
       window.location.href = url;
     }
 
@@ -204,6 +206,8 @@
       localStorage.removeItem("login");
       localStorage.removeItem("trasa");
       localStorage.removeItem("tablica");
+      localStorage.removeItem("tablicaSam");
+      localStorage.removeItem("tablicaNacz");
 
       document.getElementById("form-section").classList.add("hidden");
       document.getElementById("kod").classList.remove("hidden");
@@ -211,24 +215,24 @@
       document.querySelector("button[onclick='checkLogin()']").style.display = "inline-block";
     }
 
-document.addEventListener("DOMContentLoaded", () => {
-  const login = localStorage.getItem("login");
-  const trasa = localStorage.getItem("trasa");
-  const tablica = localStorage.getItem("tablica");
+    document.addEventListener("DOMContentLoaded", () => {
+      const login = localStorage.getItem("login");
+      const trasa = localStorage.getItem("trasa");
+      const tablicaSam = localStorage.getItem("tablicaSam");
+      const tablicaNacz = localStorage.getItem("tablicaNacz");
 
-  if (login) {
-    document.getElementById("user-name").textContent = login;
-    document.getElementById("form-section").classList.remove("hidden");
-    document.getElementById("kod").classList.add("hidden");
-    document.querySelector("button[onclick='checkLogin()']").style.display = "none";
-  }
+      if (login) {
+        document.getElementById("user-name").textContent = login;
+        document.getElementById("form-section").classList.remove("hidden");
+        document.getElementById("kod").classList.add("hidden");
+        document.querySelector("button[onclick='checkLogin()']").style.display = "none";
+      }
 
-  if (trasa) document.getElementById("trasa").value = trasa;
-  if (tablica) document.getElementById("tablica").value = tablica;
-});
+      if (trasa) document.getElementById("trasa").value = trasa;
+      if (tablicaSam) document.getElementById("tablicaSam").value = tablicaSam;
+      if (tablicaNacz) document.getElementById("tablicaNacz").value = tablicaNacz;
+    });
   </script>
 
 </body>
 </html>
-
-
