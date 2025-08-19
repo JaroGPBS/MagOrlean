@@ -128,7 +128,7 @@
     <div class="cam-controls">
       <button id="scanOnceBtn">📷 SKANOWANIE</button>
     </div>
-    <div class="cam-status" id="camStatus">Skaner nieaktywny.</div>
+    <div class="cam-status" id="camStatus"></div>
 
     <div id="reader"></div>
     <div id="scan-result">Kliknij SKANOWANIE aby odczytać kod QR...</div>
@@ -295,12 +295,10 @@ async function pickBackCamera() {
 async function stopScanner() {
   if (!html5Qr) return;
   try { await html5Qr.stop(); await html5Qr.clear(); } catch(e) {}
-  document.getElementById("camStatus").textContent = "Skaner nieaktywny.";
 }
 
 async function scanOnce() {
   ensureAudio(); // wymagana interakcja na mobile
-  document.getElementById("camStatus").textContent = "Uruchamiam aparat...";
   if (!html5Qr) html5Qr = new Html5Qrcode("reader");
   if (!selectedCamId) selectedCamId = await pickBackCamera();
 
@@ -326,9 +324,7 @@ async function scanOnce() {
       },
       () => {} // onScanFailure – ignorujemy
     );
-    document.getElementById("camStatus").textContent = "Skanowanie...";
   } catch (e) {
-    document.getElementById("camStatus").textContent = "❌ " + e;
   }
 }
 
@@ -419,3 +415,4 @@ document.addEventListener("DOMContentLoaded", () => {
 
 </body>
 </html>
+
