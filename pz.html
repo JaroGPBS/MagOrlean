@@ -24,6 +24,7 @@
       box-shadow: 0 0 10px rgba(0,0,0,0.2);
       display: flex;
       flex-direction: column;
+      justify-content: space-between;
       min-height: 90vh;
     }
     .header-row {
@@ -71,12 +72,13 @@
     input { background-color: #222; color: #f5f5f5; }
     input::placeholder { color: #999; }
 
+    /* Skaner */
     #reader { width: 100%; max-width: 400px; margin: 12px auto; }
-    #scan-result { text-align: center; color: #00ff00; margin-bottom: 12px; }
-
+    #scan-result { text-align: center; color: #00ff00; margin-bottom: 12px; min-height: 1.2em; }
     .cam-controls { display: flex; gap: 8px; margin-bottom: 6px; }
     .cam-controls button { flex: 1; cursor: pointer; background:#555; color:#fff; }
 
+    /* Lista kodów */
     ul { list-style: none; padding: 0; }
     li {
       display: flex; align-items: center; gap: 8px;
@@ -105,7 +107,7 @@
       font-size:.85rem; background:#222; color:#f5f5f5;
     }
 
-    /* Input ręczny + przycisk 15% po prawej */
+    /* Input ręczny + przycisk 15% */
     .manual-row { display: flex; gap: 8px; margin: 6px 0; }
     .manual-row input { flex: 1; }
     .manual-row button {
@@ -120,8 +122,16 @@
     }
     .manual-row button:hover { background: #777; }
 
-    /* Blok wysyłki na dole pod listą */
-    .send-block { margin-top: 14px; }
+    /* Dodatkowe informacje + Wyślij dane: JEDEN POD DRUGIM */
+    .extra-row {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 14px;
+    }
+    .extra-row input,
+    .extra-row button { width: 100%; }
+
     .footer-logo { text-align: center; margin-top: 20px; }
     .footer-logo img { width: 25%; max-width: 150px; height: auto; }
 
@@ -138,6 +148,7 @@
 
     <div class="data-display" id="daneUzytkownika">Wczytywanie danych...</div>
 
+    <!-- Skan jednorazowy -->
     <div class="cam-controls">
       <button id="scanOnceBtn">📷 SKANOWANIE</button>
     </div>
@@ -157,8 +168,8 @@
     </div>
     <ul id="codeList"></ul>
 
-    <!-- POD SPODEM: dodatkowe + wyślij -->
-    <div class="send-block">
+    <!-- Dodatkowe + Wyślij: jeden pod drugim -->
+    <div class="extra-row">
       <input type="text" id="dodatkoweInfo" placeholder="Dodatkowe informacje (opcjonalne)" autocomplete="off">
       <button onclick="sendData()">Wyślij dane</button>
       <p id="status"></p>
@@ -174,16 +185,20 @@
 <script>
 function goBack() { window.location.href = "index.html"; }
 
+/* Typy dozwolone */
 const allowed = [
   "FM","LQ","RQ","XS","ODL","ODR","CU","DUO","HICU","HIDUO","HIUNO",
   "FMB","LQB","RQB",
   "FMBRBQ","ODBRBQ","CUBQ","DUOBQ"
 ];
 
+/* Endpoint Apps Script */
 const scriptURL = "https://script.google.com/macros/s/AKfycbzNy43SKVLV4iQNDwAT_FssmZRymhloaYAWFxWgMja1rCR0xJTmXaLU_yYbnvx2kq0Ukw/exec";
 
-let codes = []; // { value, note, nok }
+/* Stan listy kodów */
+let codes = []; // element: { value, note, nok }
 
+/* Dźwięk + wibracja */
 let audioCtx = null;
 function ensureAudio() {
   if (!audioCtx) {
@@ -195,7 +210,8 @@ function playBeep() {
   if (!audioCtx) return;
   const o = audioCtx.createOscillator();
   const g = audioCtx.createGain();
-  o.type = "sine"; o.frequency.value = 880;
+  o.type = "sine";
+  o.frequency.value = 880;
   g.gain.value = 0.0001;
   o.connect(g); g.connect(audioCtx.destination);
   const now = audioCtx.currentTime;
@@ -205,8 +221,10 @@ function playBeep() {
 }
 function buzz() { if (navigator.vibrate) navigator.vibrate(50); }
 
+/* LocalStorage helpers */
 function saveCodes() { localStorage.setItem("codesPZ", JSON.stringify(codes)); }
 
+/* Lista kodów – render */
 function updateList() {
   const list = document.getElementById("codeList");
   const count = document.getElementById("codeCount");
@@ -216,6 +234,7 @@ function updateList() {
   codes.forEach((item, index) => {
     const li = document.createElement("li");
 
+    // pole TYP
     const inputNote = document.createElement("input");
     inputNote.type = "text";
     inputNote.placeholder = "TYP";
@@ -231,6 +250,7 @@ function updateList() {
       saveCodes();
     };
 
+    // pole kodu
     const codeText = document.createElement("input");
     codeText.type = "text";
     codeText.value = item.value;
@@ -240,6 +260,7 @@ function updateList() {
       saveCodes();
     };
 
+    // NOK (normalny rozmiar czcionki)
     const nokCheckbox = document.createElement("input");
     nokCheckbox.type = "checkbox";
     nokCheckbox.checked = !!item.nok;
@@ -256,10 +277,10 @@ function updateList() {
     nokLabel.style.alignItems = "center";
     nokLabel.style.gap = "4px";
     nokLabel.style.marginLeft = "auto";
-    /* USUNIĘTO: zmniejszanie czcionki NOK */
     nokLabel.appendChild(nokCheckbox);
     nokLabel.appendChild(document.createTextNode("NOK"));
 
+    // Usuń
     const remove = document.createElement("span");
     remove.className = "remove-btn";
     remove.textContent = "✕";
@@ -294,7 +315,7 @@ function removeCode(index) {
   updateList();
 }
 
-/* SKAN – jeden klik = jeden skan */
+/* SKAN – jeden klik = jeden skan, okno KWADRAT 220x220 */
 let html5Qr = null;
 let selectedCamId = null;
 
@@ -312,14 +333,14 @@ async function stopScanner() {
 }
 
 async function scanOnce() {
-  ensureAudio();
+  ensureAudio(); // aktywacja audio po interakcji (mobile)
   if (!html5Qr) html5Qr = new Html5Qrcode("reader");
   if (!selectedCamId) selectedCamId = await pickBackCamera();
 
   try {
     await html5Qr.start(
       selectedCamId,
-  { fps: 10, qrbox: { width: 150, height: 150 } },
+      { fps: 10, qrbox: { width: 220, height: 220 } }, // KWADRAT
       text => {
         const val = (text || "").toUpperCase().trim();
         if (!val) return;
@@ -336,7 +357,7 @@ async function scanOnce() {
         }
         stopScanner(); // zatrzymaj po 1 odczycie
       },
-      () => {}
+      () => {} // ignoruj błędy klatkowe
     );
   } catch (e) {
     document.getElementById("scan-result").innerText = "❌ " + e;
@@ -344,6 +365,7 @@ async function scanOnce() {
 }
 document.getElementById("scanOnceBtn").addEventListener("click", scanOnce);
 
+/* Wysyłka */
 function sendData() {
   const login = localStorage.getItem("login") || "";
   const trasa = localStorage.getItem("trasa") || "";
@@ -377,6 +399,7 @@ function sendData() {
       codes = [];
       localStorage.removeItem("codesPZ");
       updateList();
+      // zostawiam login, czyścimy trasę i tablicę (tak chciałeś wcześniej)
       localStorage.removeItem("trasa");
       localStorage.removeItem("tablica");
       stopScanner();
@@ -387,6 +410,7 @@ function sendData() {
     });
 }
 
+/* Init */
 document.addEventListener("DOMContentLoaded", () => {
   try {
     const savedCodes = localStorage.getItem("codesPZ");
@@ -405,6 +429,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 </script>
 
+<!-- Lista typów (podpowiedzi) -->
 <datalist id="typList">
   <option value="FM">
   <option value="LQ">
@@ -428,6 +453,3 @@ document.addEventListener("DOMContentLoaded", () => {
 
 </body>
 </html>
-
-
-
