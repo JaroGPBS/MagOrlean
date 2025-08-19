@@ -55,7 +55,7 @@
       background-color: #777;
     }
     .data-display {
-      font-size: 14px;
+      font-size: 10px;
       background-color: #444;
       padding: 10px;
       border-radius: 8px;
@@ -306,7 +306,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const login = localStorage.getItem("login") || "brak";
   const trasa = localStorage.getItem("trasa") || "brak";
   const tablica = localStorage.getItem("tablica") || "brak";
-  document.getElementById("daneUzytkownika").innerHTML = `${login}<br>${trasa}<br>${tablica}`;
+  document.getElementById("daneUzytkownika").innerHTML = `${login}<br>${trasa} - ${tablica}`;
 
   const html5Qr = new Html5Qrcode("reader");
 
@@ -360,6 +360,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 </body>
 </html>
+
 
 
 
