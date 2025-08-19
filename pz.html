@@ -53,6 +53,7 @@
     }
     .back-button:hover { background-color: #777; }
 
+    /* Prost y styl danych – mniejsza czcionka + jedna linia */
     .data-display {
       font-size: 0.9rem;
       background-color: #444;
@@ -64,7 +65,9 @@
     }
 
     input, button {
+      width: 100%;
       padding: 10px;
+      margin: 6px 0;
       font-size: 1rem;
       border: 1px solid #555;
       border-radius: 4px;
@@ -72,19 +75,14 @@
     input { background-color: #222; color: #f5f5f5; }
     input::placeholder { color: #999; }
 
-    /* Skaner */
-#reader {
-  display: none;        /* ukryty gdy nie skanuje */
-  width: 250px;         /* szerokość */
-  height: 250px;        /* wysokość */
-  margin: 12px auto;    /* wyśrodkowanie */
-  background: #000;     /* czarne tło podglądu */
-}
-    #scan-result { text-align: center; color: #00ff00; margin-bottom: 12px; min-height: 1.2em; }
+    /* Kontener na skaner + przycisk */
+    #reader { width: 100%; max-width: 400px; margin: 12px auto; }
+    #scan-result { text-align: center; color: #00ff00; margin-bottom: 12px; }
+
     .cam-controls { display: flex; gap: 8px; margin-bottom: 6px; }
     .cam-controls button { flex: 1; cursor: pointer; background:#555; color:#fff; }
+    .cam-status { text-align:center; font-size:.9rem; color:#ccc; margin-bottom: 8px; }
 
-    /* Lista kodów */
     ul { list-style: none; padding: 0; }
     li {
       display: flex; align-items: center; gap: 8px;
@@ -106,42 +104,14 @@
       background-color: #1c1c1c; color: #f5f5f5; border: 1px solid #555; padding: 6px;
     }
     .remove-btn { color: red; cursor: pointer; padding: 0 6px; font-weight: bold; }
-
+    .footer-logo { text-align: center; margin-top: 20px; }
+    .footer-logo img { width: 25%; max-width: 150px; height: auto; }
+    @media screen and (max-width: 600px) { .logo { font-size: 2rem; } }
     .list-header { display:flex; align-items:center; gap:8px; }
     .badge {
       display:inline-block; padding:2px 8px; border:1px solid #666; border-radius:999px;
       font-size:.85rem; background:#222; color:#f5f5f5;
     }
-
-    /* Ręczne dodawanie: input + przycisk 15% */
-    .manual-row { display: flex; gap: 8px; margin: 6px 0; }
-    .manual-row input { flex: 1; }
-    .manual-row button {
-      flex: 0 0 15%;
-      padding: 8px;
-      font-size: 0.8rem;
-      background: #555;
-      color: #fff;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-    .manual-row button:hover { background: #777; }
-
-    /* Dodatkowe informacje + Wyślij dane: jeden pod drugim */
-    .extra-row {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      margin-top: 14px;
-    }
-    .extra-row input,
-    .extra-row button { width: 100%; }
-
-    .footer-logo { text-align: center; margin-top: 20px; }
-    .footer-logo img { width: 25%; max-width: 150px; height: auto; }
-
-    @media screen and (max-width: 600px) { .logo { font-size: 2rem; } }
   </style>
 </head>
 <body>
@@ -154,19 +124,17 @@
 
     <div class="data-display" id="daneUzytkownika">Wczytywanie danych...</div>
 
-    <!-- Skan jednorazowy -->
+    <!-- PRZYCISK: skan jednorazowy -->
     <div class="cam-controls">
       <button id="scanOnceBtn">📷 SKANOWANIE</button>
     </div>
+    <div class="cam-status" id="camStatus">Skaner nieaktywny.</div>
 
     <div id="reader"></div>
-    <div id="scan-result"></div>
+    <div id="scan-result">Kliknij SKANOWANIE aby odczytać kod QR...</div>
 
-    <!-- Ręczne dodawanie: input + przycisk 15% -->
-    <div class="manual-row">
-      <input type="text" id="manualInput" placeholder="Dodaj kod ręcznie" autocomplete="off">
-      <button onclick="addManual()">Dodaj S/N</button>
-    </div>
+    <input type="text" id="manualInput" placeholder="Dodaj kod ręcznie" autocomplete="off">
+    <button onclick="addManual()">Dodaj do listy</button>
 
     <div class="list-header">
       <h3 style="margin:0;">Lista kodów</h3>
@@ -174,12 +142,9 @@
     </div>
     <ul id="codeList"></ul>
 
-    <!-- Dodatkowe + Wyślij: jeden pod drugim -->
-    <div class="extra-row">
-      <input type="text" id="dodatkoweInfo" placeholder="Dodatkowe informacje (opcjonalne)" autocomplete="off">
-      <button onclick="sendData()">Wyślij dane</button>
-      <p id="status"></p>
-    </div>
+    <input type="text" id="dodatkoweInfo" placeholder="Dodatkowe informacje (opcjonalne)" autocomplete="off">
+    <button onclick="sendData()">Wyślij dane</button>
+    <p id="status"></p>
   </div>
 
   <div class="footer-logo">
@@ -191,20 +156,18 @@
 <script>
 function goBack() { window.location.href = "index.html"; }
 
-/* Typy dozwolone */
+// DOZWOLONE typy
 const allowed = [
   "FM","LQ","RQ","XS","ODL","ODR","CU","DUO","HICU","HIDUO","HIUNO",
   "FMB","LQB","RQB",
   "FMBRBQ","ODBRBQ","CUBQ","DUOBQ"
 ];
 
-/* Endpoint Apps Script */
 const scriptURL = "https://script.google.com/macros/s/AKfycbzNy43SKVLV4iQNDwAT_FssmZRymhloaYAWFxWgMja1rCR0xJTmXaLU_yYbnvx2kq0Ukw/exec";
 
-/* Stan listy kodów */
-let codes = []; // element: { value, note, nok }
+let codes = []; // [{ value, note, nok }], najnowszy na indeksie 0
 
-/* Dźwięk + wibracja */
+// WebAudio „beep” – tworzymy po pierwszej interakcji (mobile)
 let audioCtx = null;
 function ensureAudio() {
   if (!audioCtx) {
@@ -227,10 +190,8 @@ function playBeep() {
 }
 function buzz() { if (navigator.vibrate) navigator.vibrate(50); }
 
-/* LocalStorage helpers */
 function saveCodes() { localStorage.setItem("codesPZ", JSON.stringify(codes)); }
 
-/* Lista kodów – render */
 function updateList() {
   const list = document.getElementById("codeList");
   const count = document.getElementById("codeCount");
@@ -240,7 +201,6 @@ function updateList() {
   codes.forEach((item, index) => {
     const li = document.createElement("li");
 
-    // pole TYP
     const inputNote = document.createElement("input");
     inputNote.type = "text";
     inputNote.placeholder = "TYP";
@@ -256,7 +216,6 @@ function updateList() {
       saveCodes();
     };
 
-    // pole kodu
     const codeText = document.createElement("input");
     codeText.type = "text";
     codeText.value = item.value;
@@ -266,7 +225,6 @@ function updateList() {
       saveCodes();
     };
 
-    // NOK
     const nokCheckbox = document.createElement("input");
     nokCheckbox.type = "checkbox";
     nokCheckbox.checked = !!item.nok;
@@ -283,10 +241,10 @@ function updateList() {
     nokLabel.style.alignItems = "center";
     nokLabel.style.gap = "4px";
     nokLabel.style.marginLeft = "auto";
+    nokLabel.style.fontSize = "0.75rem"; // mniejsza czcionka NOK
     nokLabel.appendChild(nokCheckbox);
     nokLabel.appendChild(document.createTextNode("NOK"));
 
-    // Usuń
     const remove = document.createElement("span");
     remove.className = "remove-btn";
     remove.textContent = "✕";
@@ -305,6 +263,7 @@ function addManual() {
   const input = document.getElementById("manualInput");
   const val = input.value.trim().toUpperCase();
   if (!val) return;
+
   const exists = codes.find(c => (c.value || "").toUpperCase().trim() === val);
   if (!exists) {
     codes.unshift({ value: val, note: "", nok: false });
@@ -321,66 +280,61 @@ function removeCode(index) {
   updateList();
 }
 
-/* SKAN – jeden klik = jeden skan, KWADRAT 250x250 */
+// ---- SKANOWANIE: 1 klik = 1 skan ----
 let html5Qr = null;
+let selectedCamId = null;
+
+async function pickBackCamera() {
+  const cams = await Html5Qrcode.getCameras();
+  if (!cams || !cams.length) throw new Error("Nie wykryto kamery.");
+  const back = cams.find(c => (c.label || "").toLowerCase().includes("back")
+                           || (c.label || "").toLowerCase().includes("environment"));
+  return (back || cams[0]).id;
+}
 
 async function stopScanner() {
   if (!html5Qr) return;
   try { await html5Qr.stop(); await html5Qr.clear(); } catch(e) {}
+  document.getElementById("camStatus").textContent = "Skaner nieaktywny.";
 }
 
 async function scanOnce() {
-  ensureAudio(); // aktywuj audio po interakcji (mobile)
+  ensureAudio(); // wymagana interakcja na mobile
+  document.getElementById("camStatus").textContent = "Uruchamiam aparat...";
+  if (!html5Qr) html5Qr = new Html5Qrcode("reader");
+  if (!selectedCamId) selectedCamId = await pickBackCamera();
 
   try {
-    const cameras = await Html5Qrcode.getCameras();
-    if (!cameras.length) {
-      document.getElementById("scan-result").innerText = "❌ Brak kamery";
-      return;
-    }
-
-    const backCam = cameras.find(c =>
-      (c.label || "").toLowerCase().includes("back") ||
-      (c.label || "").toLowerCase().includes("environment")
-    ) || cameras[0];
-
-    if (!html5Qr) html5Qr = new Html5Qrcode("reader");
-
     await html5Qr.start(
-      backCam.id,
-      { fps: 10, qrbox: { width: 230, height: 230 } }, // KWADRAT
+      selectedCamId,
+      { fps: 10, qrbox: 250, aspectRatio: 1.777 },
       text => {
         const val = (text || "").toUpperCase().trim();
         if (!val) return;
-
         const exists = codes.find(c => (c.value || "").toUpperCase().trim() === val);
         if (!exists) {
           codes.unshift({ value: val, note: "", nok: false });
-          saveCodes();
-          updateList();
-
+          saveCodes(); updateList();
+          document.getElementById("scan-result").innerText = "Zeskanowano: " + val;
+          playBeep(); buzz();
           const sr = document.getElementById("scan-result");
-          sr.innerText = "Zeskanowano: " + val;
-          playBeep();
-          buzz();
-
           sr.style.transition = "background-color .15s";
           sr.style.backgroundColor = "#1e3a1e";
           setTimeout(() => sr.style.backgroundColor = "transparent", 180);
         }
-
-        stopScanner(); // zatrzymaj po 1 odczycie
+        stopScanner(); // ⛔ zatrzymaj po 1 odczycie
       },
-      () => {} // ignoruj błędy klatek
+      () => {} // onScanFailure – ignorujemy
     );
+    document.getElementById("camStatus").textContent = "Skanowanie...";
   } catch (e) {
-    document.getElementById("scan-result").innerText = "❌ " + e;
+    document.getElementById("camStatus").textContent = "❌ " + e;
   }
 }
 
 document.getElementById("scanOnceBtn").addEventListener("click", scanOnce);
 
-/* Wysyłka */
+// ---- Wysyłka ----
 function sendData() {
   const login = localStorage.getItem("login") || "";
   const trasa = localStorage.getItem("trasa") || "";
@@ -424,18 +378,16 @@ function sendData() {
     });
 }
 
-/* Init */
 document.addEventListener("DOMContentLoaded", () => {
-  try {
-    const savedCodes = localStorage.getItem("codesPZ");
-    if (savedCodes) codes = JSON.parse(savedCodes) || [];
-  } catch { codes = []; }
+  const savedCodes = localStorage.getItem("codesPZ");
+  if (savedCodes) codes = JSON.parse(savedCodes);
   updateList();
 
   const login = localStorage.getItem("login") || "brak";
   const trasa = localStorage.getItem("trasa") || "brak";
   const tablica = localStorage.getItem("tablica") || "brak";
 
+  // Jedna linia: TRASA – TABLICE
   document.getElementById("daneUzytkownika").innerHTML = `
     <div><strong>${login}</strong></div>
     <div>${trasa} – ${tablica}</div>
@@ -443,7 +395,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 </script>
 
-<!-- Lista typów (podpowiedzi) -->
+<!-- LISTA typów dla podpowiedzi -->
 <datalist id="typList">
   <option value="FM">
   <option value="LQ">
@@ -467,4 +419,3 @@ document.addEventListener("DOMContentLoaded", () => {
 
 </body>
 </html>
-
