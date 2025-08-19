@@ -73,12 +73,13 @@
     input::placeholder { color: #999; }
 
     /* Skaner */
-    #reader {
-      width: 100%;
-      max-width: 400px;
-      margin: 12px auto;
-      aspect-ratio: 1 / 1; /* KWADRATOWY podgląd */
-    }
+#reader {
+  display: none;        /* ukryty gdy nie skanuje */
+  width: 250px;         /* szerokość */
+  height: 250px;        /* wysokość */
+  margin: 12px auto;    /* wyśrodkowanie */
+  background: #000;     /* czarne tło podglądu */
+}
     #scan-result { text-align: center; color: #00ff00; margin-bottom: 12px; min-height: 1.2em; }
     .cam-controls { display: flex; gap: 8px; margin-bottom: 6px; }
     .cam-controls button { flex: 1; cursor: pointer; background:#555; color:#fff; }
@@ -347,7 +348,7 @@ async function scanOnce() {
 
     await html5Qr.start(
       backCam.id,
-      { fps: 10, qrbox: { width: 250, height: 250 } }, // KWADRAT
+      { fps: 10, qrbox: { width: 230, height: 230 } }, // KWADRAT
       text => {
         const val = (text || "").toUpperCase().trim();
         if (!val) return;
@@ -466,3 +467,4 @@ document.addEventListener("DOMContentLoaded", () => {
 
 </body>
 </html>
+
