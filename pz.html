@@ -53,7 +53,7 @@
     }
     .back-button:hover { background-color: #777; }
 
-    /* Prost y styl danych – mniejsza czcionka + jedna linia */
+    /* Prosty styl danych – mniejsza czcionka + jedna linia */
     .data-display {
       font-size: 0.9rem;
       background-color: #444;
@@ -81,7 +81,6 @@
 
     .cam-controls { display: flex; gap: 8px; margin-bottom: 6px; }
     .cam-controls button { flex: 1; cursor: pointer; background:#555; color:#fff; }
-    .cam-status { text-align:center; font-size:.9rem; color:#ccc; margin-bottom: 8px; }
 
     ul { list-style: none; padding: 0; }
     li {
@@ -124,11 +123,11 @@
 
     <div class="data-display" id="daneUzytkownika">Wczytywanie danych...</div>
 
-    <!-- PRZYCISK: skan jednorazowy -->
+    <!-- PRZYCISK: skan jednorazowy (bez statusu pod spodem) -->
     <div class="cam-controls">
       <button id="scanOnceBtn">📷 SKANOWANIE</button>
     </div>
-   
+
     <div id="reader"></div>
     <div id="scan-result">Kliknij SKANOWANIE aby odczytać kod QR...</div>
 
@@ -166,7 +165,7 @@ const scriptURL = "https://script.google.com/macros/s/AKfycbzNy43SKVLV4iQNDwAT_F
 
 let codes = []; // [{ value, note, nok }], najnowszy na indeksie 0
 
-// WebAudio „beep” – tworzymy po pierwszej interakcji (mobile)
+// WebAudio „beep” – po pierwszej interakcji (mobile)
 let audioCtx = null;
 function ensureAudio() {
   if (!audioCtx) {
@@ -304,7 +303,7 @@ async function scanOnce() {
   try {
     await html5Qr.start(
       selectedCamId,
-      { fps: 10, qrbox: 180, aspectRatio: 1.777 },
+      { fps: 10, qrbox: 250, aspectRatio: 1.777 }, // zmniejsz okno: np. qrbox: 180
       text => {
         const val = (text || "").toUpperCase().trim();
         if (!val) return;
@@ -324,6 +323,7 @@ async function scanOnce() {
       () => {} // onScanFailure – ignorujemy
     );
   } catch (e) {
+    document.getElementById("scan-result").innerText = "❌ " + e;
   }
 }
 
@@ -414,5 +414,3 @@ document.addEventListener("DOMContentLoaded", () => {
 
 </body>
 </html>
-
-
