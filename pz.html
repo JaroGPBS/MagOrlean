@@ -1,10 +1,12 @@
 <!DOCTYPE html>
+
 <html lang="pl">
 <head>
   <meta charset="UTF-8">
-  <title>Le Magazynier</title>
+  <title>Przyjęcie – Le Magazynier</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link href="https://fonts.googleapis.com/css2?family=Caveat&family=Great+Vibes&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Caveat&display=swap" rel="stylesheet">
   <style>
     * { box-sizing: border-box; }
     body {
@@ -17,216 +19,345 @@
     .form-wrapper {
       max-width: 500px;
       margin: auto;
-      background: #333333;
+      background: #333;
       padding: 20px;
       border-radius: 12px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
       display: flex;
       flex-direction: column;
       justify-content: space-between;
       min-height: 90vh;
     }
-
-    .logo {
+    .header-row {
       display: flex;
       justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 20px;
+      align-items: center;
+      margin-bottom: 5px;
     }
-    .logo-left {
+    .logo {
       font-family: 'Informal Roman', cursive;
       color: #f9f9f9;
-      line-height: 0.9;
-      margin-left: 30px;
+      font-size: 2.5rem;
+      margin-left: 40px;
     }
-    .logo-left .main {
-      font-size: 3rem;
-    }
-    .logo-left .sub {
-      font-size: 2rem;
-      transform: translateY(-11px) translateX(26px);
-      opacity: 0.8;
-    }
-    .logo-right {
-      text-align: right;
-      color: #ccc;
-      font-family: 'Informal Roman', cursive;
-    }
-    .logo-right .by {
-      font-size: 1.1rem;
-      margin-bottom: 1.5px;
-    }
-    .logo-right .initials {
-      font-size: 1.5rem;
-      font-weight: bold;
-      line-height: 1;
-      transform: translateX(-20px);
-    }
-
-    input {
-      margin: 6px 0 20px;
-      padding: 10px;
-      width: 100%;
-      font-size: 1rem;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-    }
-
-    input.uppercase {
-      text-transform: uppercase;
-    }
-
-    .hidden {
-      display: none;
-    }
-
-    .buttons {
-      display: flex;
-      justify-content: space-between;
-      gap: 12px;
-      margin-top: 20px;
-    }
-    .buttons button {
-      flex: 1;
-      padding: 12px;
-      font-size: 1rem;
+    .back-button {
+      width: 25%;
+      min-width: 80px;
+      padding: 8px;
+      font-size: 0.9rem;
       border: none;
       border-radius: 6px;
-      background-color: #666;
-      color: white;
+      background-color: #555;
+      color: #fff;
       cursor: pointer;
-      transition: background-color 0.2s;
-    }
-    .buttons button:hover {
-      background-color: #888;
-    }
-
-    .logout-btn {
-      background-color: #aa3333;
-      padding: 10px 20px;
-      border: none;
-      border-radius: 6px;
-      color: white;
-      cursor: pointer;
-      margin-top: 20px;
-      float: right;
-    }
-
-    .footer-logo {
-      margin-top: 20px;
       text-align: center;
     }
-    .footer-logo img {
-      width: 25%;
-      max-width: 150px;
-      height: auto;
+    .back-button:hover {
+      background-color: #777;
+    }
+    .data-display {
+      font-size: 14px;
+      background-color: #444;
+      padding: 10px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      text-align: left;
+    }
+    input, button {
+      width: 100%;
+      padding: 10px;
+      margin: 6px 0;
+      font-size: 1rem;
+      border: 1px solid #555;
+      border-radius: 4px;
+    }
+    input {
+      background-color: #222;
+      color: #f5f5f5;
+    }
+    input::placeholder { color: #999; }
+    #reader { width: 100%; max-width: 400px; margin: 16px auto; }
+    #scan-result { text-align: center; color: #00ff00; margin-bottom: 12px; }
+    ul { list-style: none; padding: 0; }
+    li {
+      display: flex; align-items: center; gap: 8px;
+      padding: 6px 0; border-bottom: 1px solid #666;
+    }
+    .note-input {
+      width: 22%; min-width: 50px; padding: 6px;
+      border: 1px solid #555; border-radius: 4px; font-size: 0.9rem;
+      text-transform: uppercase; background-color: #1c1c1c; color: #f5f5f5;
+    }
+    .code-text {
+      flex: 1; font-size: 0.95rem; word-break: break-word;
+      background-color: #1c1c1c; color: #f5f5f5; border: 1px solid #555; padding: 6px;
+    }
+    .remove-btn { color: red; cursor: pointer; padding: 0 6px; font-weight: bold; }
+    .footer-logo { text-align: center; margin-top: 20px; }
+    .footer-logo img { width: 25%; max-width: 150px; height: auto; }
+    @media screen and (max-width: 600px) {
+      .logo { font-size: 2rem; }
+    }
+    .list-header { display:flex; align-items:center; gap:8px; }
+    .badge {
+      display:inline-block; padding:2px 8px; border:1px solid #666; border-radius:999px;
+      font-size:.85rem; background:#222; color:#f5f5f5;
     }
   </style>
 </head>
 <body>
-
-  <div class="form-wrapper" autocomplete="off">
-    <div>
-      <!-- Nagłówek -->
-      <div class="logo">
-        <div class="logo-left">
-          <div class="main">Le Magazynier</div>
-          <div class="sub">Orleans</div>
-        </div>
-      </div>
-
-      <!-- Logowanie -->
-      <input type="password" id="kod" placeholder="Kod pracownika" required>
-      <button onclick="checkLogin()">Zaloguj</button>
-
-      <!-- Sekcja po zalogowaniu -->
-      <div id="form-section" class="hidden">
-        <p>Witaj, <strong id="user-name"></strong>!</p>
-
-        <input type="text" id="trasa" class="uppercase" placeholder="NR TRASY" required autocomplete="off">
-        <input type="text" id="tablica" class="uppercase" placeholder="TABLICA REJESTRACYJNA" required autocomplete="off">
-
-        <div class="buttons">
-          <button onclick="goTo('pz.html')">Przyjęcie</button>
-          <button onclick="goTo('wz.html')">Wydanie</button>
-        </div>
-
-        <button class="logout-btn" onclick="logout()">Wyloguj</button>
-      </div>
+<div class="form-wrapper">
+  <div>
+    <div class="header-row">
+      <div class="logo">PeZetka</div>
+      <button class="back-button" onclick="goBack()">← Cofnij</button>
     </div>
 
-    <div class="footer-logo">
-      <p style="margin-bottom: 6px; font-size: 0.9rem; color: #aaa;">Created by Jaro</p>
-      <img src="https://gpbs.pl/assets/images/xlogo_wh.png.pagespeed.ic.3FdfUvX7s-.webp" alt="Logo GPBS">
-    </div>
+```
+<div class="data-display" id="daneUzytkownika">Wczytywanie danych...</div>
+<div id="reader"></div>
+<div id="scan-result">Zeskanuj kod QR...</div>
+
+<input type="text" id="manualInput" placeholder="Dodaj kod ręcznie" autocomplete="off">
+<button onclick="addManual()">Dodaj do listy</button>
+
+<div class="list-header">
+  <h3 style="margin:0;">Lista kodów</h3>
+  <span class="badge" id="codeCount">0</span>
+</div>
+<ul id="codeList"></ul>
+
+<input type="text" id="dodatkoweInfo" placeholder="Dodatkowe informacje (opcjonalne)" autocomplete="off">
+<button onclick="sendData()">Wyślij dane</button>
+<p id="status"></p>
+```
+
   </div>
 
-  <script>
-    const users = {
-      "2102": "Jarosław J. ",
-      "2009": "Krystian M. ",
-      "2023": "Mateusz M. "
+  <div class="footer-logo">
+    <p class="footer-text">Created by Jaro</p>
+    <img src="https://gpbs.pl/assets/images/xlogo_wh.png.pagespeed.ic.3FdfUvX7s-.webp" alt="Logo GPBS">
+  </div>
+</div>
+
+<script>
+function goBack() {
+  window.location.href = "index.html";
+}
+
+// NOWA lista dozwolonych typów (zamiany + dodanie BQCUI)
+const allowed = [
+  "FM","LQ","RQ","XS","ODL","ODR","CU","DUO","HICU","HIDUO","FMB","LQB","RQB",
+  "BQCUO","BQEXO","BQEXI","BQCUI" // <-- nowe/zmienione
+];
+
+const scriptURL = "https://script.google.com/macros/s/AKfycbzNy43SKVLV4iQNDwAT_FssmZRymhloaYAWFxWgMja1rCR0xJTmXaLU_yYbnvx2kq0Ukw/exec";
+let codes = []; // [{ value, note, nok }], najnowszy na indeksie 0
+
+function saveCodes() {
+  localStorage.setItem("codesPZ", JSON.stringify(codes));
+}
+
+function updateList() {
+  const list = document.getElementById("codeList");
+  const count = document.getElementById("codeCount");
+  list.innerHTML = "";
+  count.textContent = String(codes.length);
+
+  codes.forEach((item, index) => {
+    const li = document.createElement("li");
+
+    const inputNote = document.createElement("input");
+    inputNote.type = "text";
+    inputNote.placeholder = "TYP";
+    inputNote.className = "note-input";
+    inputNote.value = item.note || "";
+    inputNote.setAttribute("list", "typList");
+    // kolor obramowania zgodnie z allowed
+    inputNote.style.borderColor = item.note && allowed.includes(item.note) ? "#0f0" : "#555";
+
+    inputNote.oninput = () => {
+      const val = inputNote.value.toUpperCase().trim();
+      inputNote.value = val;
+      codes[index].note = val;
+      inputNote.style.borderColor = allowed.includes(val) ? "#0f0" : "red";
+      saveCodes();
     };
 
-    function checkLogin() {
-      const kod = document.getElementById("kod").value.trim();
-      const login = users[kod];
+    const codeText = document.createElement("input");
+    codeText.type = "text";
+    codeText.value = item.value;
+    codeText.className = "code-text";
+    codeText.oninput = () => {
+      codes[index].value = codeText.value.toUpperCase().trim();
+      saveCodes();
+    };
 
-      if (!login) {
-        alert("Niepoprawny kod pracownika.");
-        return;
-      }
+    const nokCheckbox = document.createElement("input");
+    nokCheckbox.type = "checkbox";
+    nokCheckbox.checked = !!item.nok;
+    nokCheckbox.style.width = "18px";
+    nokCheckbox.style.height = "18px";
+    nokCheckbox.style.cursor = "pointer";
+    nokCheckbox.onchange = () => {
+      codes[index].nok = nokCheckbox.checked;
+      saveCodes();
+    };
 
-      localStorage.setItem("login", login);
-      document.getElementById("user-name").textContent = login;
-      document.getElementById("form-section").classList.remove("hidden");
-      document.getElementById("kod").classList.add("hidden");
-      event.target.style.display = "none";
-    }
+    const nokLabel = document.createElement("label");
+    nokLabel.style.display = "flex";
+    nokLabel.style.alignItems = "center";
+    nokLabel.style.gap = "4px";
+    nokLabel.style.marginLeft = "auto";
+    nokLabel.appendChild(nokCheckbox);
+    nokLabel.appendChild(document.createTextNode("NOK"));
 
-    function goTo(destination) {
-      const trasa = document.getElementById("trasa").value.trim().toUpperCase();
-      const tablica = document.getElementById("tablica").value.trim().toUpperCase();
+    const remove = document.createElement("span");
+    remove.className = "remove-btn";
+    remove.textContent = "✕";
+    remove.title = "Usuń";
+    remove.onclick = () => removeCode(index);
 
-      if (!trasa || !tablica) {
-        alert("Proszę uzupełnić wszystkie pola.");
-        return;
-      }
+    li.appendChild(inputNote);
+    li.appendChild(codeText);
+    li.appendChild(nokLabel);
+    li.appendChild(remove);
+    list.appendChild(li);
+  });
+}
 
-      localStorage.setItem("trasa", trasa);
-      localStorage.setItem("tablica", tablica);
+function addManual() {
+  const input = document.getElementById("manualInput");
+  const val = input.value.trim().toUpperCase();
+  if (!val) return;
 
-      const url = `${destination}?trasa=${encodeURIComponent(trasa)}&tablica=${encodeURIComponent(tablica)}`;
-      window.location.href = url;
-    }
+  const exists = codes.find(c => (c.value || "").toUpperCase().trim() === val);
+  if (!exists) {
+    // najnowszy na górze
+    codes.unshift({ value: val, note: "", nok: false });
+    saveCodes();
+    updateList();
+  }
+  input.value = "";
+}
 
-    function logout() {
-      localStorage.removeItem("login");
-      localStorage.removeItem("trasa");
-      localStorage.removeItem("tablica");
+function removeCode(index) {
+  codes.splice(index, 1);
+  saveCodes();
+  updateList();
+}
 
-      document.getElementById("form-section").classList.add("hidden");
-      document.getElementById("kod").classList.remove("hidden");
-      document.getElementById("kod").value = "";
-      document.querySelector("button[onclick='checkLogin()']").style.display = "inline-block";
-    }
+function sendData() {
+  const login = localStorage.getItem("login") || "";
+  const trasa = localStorage.getItem("trasa") || "";
+  const tablica = localStorage.getItem("tablica") || "";
+  const dodatkoweInfo = document.getElementById("dodatkoweInfo").value.trim();
 
-document.addEventListener("DOMContentLoaded", () => {
-  const login = localStorage.getItem("login");
-  const trasa = localStorage.getItem("trasa");
-  const tablica = localStorage.getItem("tablica");
-
-  if (login) {
-    document.getElementById("user-name").textContent = login;
-    document.getElementById("form-section").classList.remove("hidden");
-    document.getElementById("kod").classList.add("hidden");
-    document.querySelector("button[onclick='checkLogin()']").style.display = "none";
+  if (!login || !trasa || !tablica || codes.length === 0) {
+    alert("Brakuje danych lub lista kodów jest pusta.");
+    return;
   }
 
-  if (trasa) document.getElementById("trasa").value = trasa;
-  if (tablica) document.getElementById("tablica").value = tablica;
+  if (!codes.every(c => c.note)) {
+    alert("Wszystkie pola TYP muszą być uzupełnione.");
+    return;
+  }
+
+  if (!confirm("Czy na pewno chcesz wysłać dane?")) return;
+
+  const finalData = codes.map(c => {
+    const status = c.nok ? "NOK" : "OK";
+    return `${c.value} | ${c.note} | ${status}`;
+  });
+
+  const formData = new FormData();
+  formData.append("login", login);
+  formData.append("trasa", trasa);
+  formData.append("tablica", tablica);
+  formData.append("dodatkowe", dodatkoweInfo || "-");
+  formData.append("kody", JSON.stringify(finalData));
+  formData.append("strona", "pz");
+
+  fetch(scriptURL, { method: "POST", body: formData })
+    .then(res => res.text())
+    .then(txt => {
+      alert("✅ Dane wysłane.");
+      codes = [];
+      localStorage.removeItem("codesPZ");
+      updateList();
+      localStorage.removeItem("trasa");
+      localStorage.removeItem("tablica");
+      window.location.href = "index.html";
+    })
+    .catch(err => {
+      document.getElementById("status").innerText = "❌ Błąd: " + err;
+    });
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  const savedCodes = localStorage.getItem("codesPZ");
+  if (savedCodes) {
+    // zachowujemy kolejność tak, by index 0 był najnowszy
+    codes = JSON.parse(savedCodes);
+  }
+  updateList();
+
+  const login = localStorage.getItem("login") || "brak";
+  const trasa = localStorage.getItem("trasa") || "brak";
+  const tablica = localStorage.getItem("tablica") || "brak";
+  document.getElementById("daneUzytkownika").innerHTML = `${login}<br>${trasa}<br>${tablica}`;
+
+  const html5Qr = new Html5Qrcode("reader");
+
+  Html5Qrcode.getCameras().then(cameras => {
+    if (cameras && cameras.length) {
+      const backCam = cameras.find(cam => {
+        const lbl = (cam.label || "").toLowerCase();
+        return lbl.includes("back") || lbl.includes("environment");
+      }) || cameras[0];
+
+      html5Qr.start(backCam.id, { fps: 10, qrbox: 250 }, text => {
+        const val = (text || "").toUpperCase().trim();
+        const exists = codes.find(c => (c.value || "").toUpperCase().trim() === val);
+        if (!exists && val) {
+          // najnowszy na górze
+          codes.unshift({ value: val, note: "", nok: false });
+          saveCodes();
+          updateList();
+          document.getElementById("scan-result").innerText = "Zeskanowano: " + val;
+        }
+      });
+    } else {
+      document.getElementById("scan-result").innerText = "❌ Nie wykryto kamery.";
+    }
+  }).catch(err => {
+    document.getElementById("scan-result").innerText = "❌ Błąd kamery: " + err;
+  });
 });
-  </script>
+</script>
+
+<!-- Zaktualizowana lista typów -->
+
+<datalist id="typList">
+  <option value="FM">
+  <option value="LQ">
+  <option value="RQ">
+  <option value="XS">
+  <option value="CU">
+  <option value="DUO">
+  <option value="HICU">
+  <option value="HIDUO">
+  <option value="BQCUO">
+  <option value="BQEXO">
+  <option value="BQCUI">
+  <option value="BQEXI">
+  <option value="ODL">
+  <option value="ODR">
+  <option value="FMB">
+  <option value="LQB">
+  <option value="RQB">
+
+</datalist>
 
 </body>
 </html>
