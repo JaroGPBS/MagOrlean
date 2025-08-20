@@ -1,11 +1,10 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-  <meta charset="UTF-8" />
-  <title>Przyjęcie – Le Magazynier</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Caveat&display=swap" rel="stylesheet">
+  <meta charset="UTF-8">
+  <title>Le Magazynier</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Caveat&family=Great+Vibes&display=swap" rel="stylesheet">
   <style>
     * { box-sizing: border-box; }
     body {
@@ -18,90 +17,100 @@
     .form-wrapper {
       max-width: 500px;
       margin: auto;
-      background: #333;
+      background: #333333;
       padding: 20px;
       border-radius: 12px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
       display: flex;
       flex-direction: column;
       justify-content: space-between;
       min-height: 90vh;
     }
-    .header-row {
+
+    .logo {
       display: flex;
       justify-content: space-between;
-      align-items: center;
-      margin-bottom: 10px;
+      align-items: flex-start;
+      margin-bottom: 20px;
     }
-    .logo {
-      font-family: 'Caveat', cursive;
-      font-size: 2.5rem;
+    .logo-left {
+      font-family: 'Informal Roman', cursive;
       color: #f9f9f9;
-      margin-left: 20px;
+      line-height: 0.9;
+      margin-left: 30px;
     }
-    .back-button {
-      padding: 8px 12px;
-      font-size: 0.9rem;
+    .logo-left .main {
+      font-size: 3rem;
+    }
+    .logo-left .sub {
+      font-size: 2rem;
+      transform: translateY(-11px) translateX(26px);
+      opacity: 0.8;
+    }
+    .logo-right {
+      text-align: right;
+      color: #ccc;
+      font-family: 'Informal Roman', cursive;
+    }
+    .logo-right .by {
+      font-size: 1.1rem;
+      margin-bottom: 1.5px;
+    }
+    .logo-right .initials {
+      font-size: 1.5rem;
+      font-weight: bold;
+      line-height: 1;
+      transform: translateX(-20px);
+    }
+
+    input {
+      margin: 6px 0 20px;
+      padding: 10px;
+      width: 100%;
+      font-size: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+
+    input.uppercase {
+      text-transform: uppercase;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .buttons {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 20px;
+    }
+    .buttons button {
+      flex: 1;
+      padding: 12px;
+      font-size: 1rem;
       border: none;
       border-radius: 6px;
-      background-color: #555;
-      color: #fff;
+      background-color: #666;
+      color: white;
       cursor: pointer;
+      transition: background-color 0.2s;
     }
-    .back-button:hover { background-color: #777; }
-
-    .data-display {
-      font-size: 0.9rem;
-      background-color: #444;
-      padding: 10px;
-      border-radius: 8px;
-      margin-bottom: 12px;
+    .buttons button:hover {
+      background-color: #888;
     }
 
-    input, button {
-      width: 100%;
-      padding: 10px;
-      margin: 6px 0;
-      font-size: 1rem;
-      border: 1px solid #555;
-      border-radius: 4px;
+    .logout-btn {
+      background-color: #aa3333;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      color: white;
+      cursor: pointer;
+      margin-top: 20px;
+      float: right;
     }
-    input { background-color: #222; color: #f5f5f5; }
-    input::placeholder { color: #999; }
-
-    #reader { width: 100%; max-width: 400px; margin: 12px auto; }
-    #scan-result { text-align: center; margin-bottom: 12px; }
-
-    .cam-controls { display: flex; gap: 8px; margin-bottom: 6px; }
-    .cam-controls button { flex: 1; cursor: pointer; background:#555; color:#fff; }
-
-    ul { list-style: none; padding: 0; }
-    li {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 6px 0;
-      border-bottom: 1px solid #666;
-    }
-    .note-input {
-      width: 20%;
-      padding: 4px;
-      font-size: 0.7rem;
-      text-transform: uppercase;
-      background-color: #1c1c1c;
-      color: #f5f5f5;
-      border: 1px solid #555;
-      border-radius: 4px;
-    }
-    .code-text {
-      flex: 1;
-      font-size: 0.95rem;
-      background-color: #1c1c1c;
-      color: #f5f5f5;
-      border: 1px solid #555;
-      padding: 6px;
-    }
-    .remove-btn { color: red; cursor: pointer; font-weight: bold; }
 
     .footer-logo {
       margin-top: 20px;
@@ -115,173 +124,110 @@
   </style>
 </head>
 <body>
-<div class="form-wrapper">
-  <div>
-    <div class="header-row">
-      <div class="logo">PeZetka</div>
-      <button class="back-button" onclick="goBack()">← Cofnij</button>
+
+  <div class="form-wrapper" autocomplete="off">
+    <div>
+      <!-- Nagłówek -->
+      <div class="logo">
+        <div class="logo-left">
+          <div class="main">Le Magazynier</div>
+          <div class="sub">Orleans</div>
+        </div>
+      </div>
+
+      <!-- Logowanie -->
+      <input type="password" id="kod" placeholder="Kod pracownika" required>
+      <button onclick="checkLogin()">Zaloguj</button>
+
+      <!-- Sekcja po zalogowaniu -->
+      <div id="form-section" class="hidden">
+        <p>Witaj, <strong id="user-name"></strong>!</p>
+
+        <input type="text" id="trasa" class="uppercase" placeholder="NR TRASY" required autocomplete="off">
+        <input type="text" id="tablica" class="uppercase" placeholder="TABLICA REJESTRACYJNA" required autocomplete="off">
+
+        <div class="buttons">
+          <button onclick="goTo('pz.html')">Przyjęcie</button>
+          <button onclick="goTo('wz.html')">Wydanie</button>
+        </div>
+
+        <button class="logout-btn" onclick="logout()">Wyloguj</button>
+      </div>
     </div>
 
-    <div class="data-display" id="daneUzytkownika">Wczytywanie danych...</div>
-
-    <div class="cam-controls">
-      <button id="scanOnceBtn">📷 SKANUJ</button>
+    <div class="footer-logo">
+      <p style="margin-bottom: 6px; font-size: 0.9rem; color: #aaa;">Created by Jaro</p>
+      <img src="https://gpbs.pl/assets/images/xlogo_wh.png.pagespeed.ic.3FdfUvX7s-.webp" alt="Logo GPBS">
     </div>
-
-    <div id="reader"></div>
-    <div id="scan-result"></div>
-
-    <div style="display:flex; gap:6px;">
-      <input type="text" id="manualInput" placeholder="Dodaj kod ręcznie" autocomplete="off" style="flex:1;">
-      <button onclick="addManual()" style="width:25%;">Dodaj</button>
-    </div>
-
-    <ul id="codeList"></ul>
-
-    <input type="text" id="dodatkoweInfo" placeholder="Dodatkowe informacje (opcjonalne)" autocomplete="off">
-    <button onclick="sendData()">Wyślij dane</button>
-    <p id="status"></p>
   </div>
 
-  <div class="footer-logo">
-    <p style="margin-bottom: 6px; font-size: 0.9rem; color: #aaa;">Created by Jaro</p>
-    <img src="https://gpbs.pl/assets/images/xlogo_wh.png.pagespeed.ic.3FdfUvX7s-.webp" alt="Logo GPBS">
-  </div>
-</div>
-
-<script>
-function goBack() { window.location.href = "index.html"; }
-
-const allowed = ["FM","LQ","RQ","XS","ODL","ODR","CU","DUO","HICU","HIDUO","HIUNO","FMB","LQB","RQB","FMBRBQ","ODBRBQ","CUBQ","DUOBQ"];
-const scriptURL = "https://script.google.com/macros/s/AKfycbzNy43SKVLV4iQNDwAT_FssmZRymhloaYAWFxWgMja1rCR0xJTmXaLU_yYbnvx2kq0Ukw/exec";
-let codes = [];
-
-function updateList() {
-  const list = document.getElementById("codeList");
-  list.innerHTML = "";
-  codes.forEach((item, index) => {
-    const li = document.createElement("li");
-
-    const note = document.createElement("input");
-    note.className = "note-input";
-    note.placeholder = "TYP";
-    note.value = item.note || "";
-    note.oninput = () => {
-      codes[index].note = note.value.trim().toUpperCase();
+  <script>
+    const users = {
+      "2102": "Jarosław J. ",
+      "2009": "Krystian M. ",
+      "2023": "Mateusz M. "
     };
 
-    const code = document.createElement("input");
-    code.className = "code-text";
-    code.value = item.value || "";
-    code.oninput = () => {
-      codes[index].value = code.value.trim().toUpperCase();
-    };
+    function checkLogin() {
+      const kod = document.getElementById("kod").value.trim();
+      const login = users[kod];
 
-    const nok = document.createElement("input");
-    nok.type = "checkbox";
-    nok.checked = item.nok || false;
-    nok.onchange = () => {
-      codes[index].nok = nok.checked;
-    };
+      if (!login) {
+        alert("Niepoprawny kod pracownika.");
+        return;
+      }
 
-    const remove = document.createElement("span");
-    remove.className = "remove-btn";
-    remove.textContent = "✕";
-    remove.onclick = () => {
-      codes.splice(index, 1);
-      updateList();
-    };
-
-    li.appendChild(note);
-    li.appendChild(code);
-    li.appendChild(nok);
-    li.appendChild(remove);
-    list.appendChild(li);
-  });
-  localStorage.setItem("codesPZ", JSON.stringify(codes));
-}
-
-function addManual() {
-  const input = document.getElementById("manualInput");
-  const val = input.value.trim().toUpperCase();
-  if (val && !codes.some(c => c.value === val)) {
-    codes.push({ value: val, note: "", nok: false });
-    updateList();
-    input.value = "";
-  }
-}
-
-async function pickBackCamera() {
-  const devices = await Html5Qrcode.getCameras();
-  return devices.find(d => d.label.toLowerCase().includes("back") || d.label.toLowerCase().includes("environment"))?.id || devices[0]?.id;
-}
-
-async function scanOnce() {
-  const reader = new Html5Qrcode("reader");
-  const camId = await pickBackCamera();
-  reader.start(camId, { fps: 10, qrbox: 250 }, text => {
-    const code = text.trim().toUpperCase();
-    if (!codes.some(c => c.value === code)) {
-      codes.push({ value: code, note: "", nok: false });
-      updateList();
+      localStorage.setItem("login", login);
+      document.getElementById("user-name").textContent = login;
+      document.getElementById("form-section").classList.remove("hidden");
+      document.getElementById("kod").classList.add("hidden");
+      event.target.style.display = "none";
     }
-    reader.stop();
-  });
-}
-document.getElementById("scanOnceBtn").addEventListener("click", scanOnce);
 
-function sendData() {
-  const login = localStorage.getItem("login") || "";
-  const trasa = localStorage.getItem("trasa") || "";
-  const tabSam = localStorage.getItem("tablicaSam") || "";
-  const tabNac = localStorage.getItem("tablicaNacz") || "";
-  const tablice = `${tabSam} / ${tabNac}`.trim();
-  const dodatkowe = document.getElementById("dodatkoweInfo").value.trim();
+    function goTo(destination) {
+      const trasa = document.getElementById("trasa").value.trim().toUpperCase();
+      const tablica = document.getElementById("tablica").value.trim().toUpperCase();
 
-  if (!login || !trasa || !tablice || codes.length === 0 || !codes.every(c => c.note)) {
-    alert("Uzupełnij wszystkie wymagane dane.");
-    return;
-  }
+      if (!trasa || !tablica) {
+        alert("Proszę uzupełnić wszystkie pola.");
+        return;
+      }
 
-  const dane = codes.map(c => `${c.note} - ${c.value}${c.nok ? " - NOK" : ""}`);
-  const formData = new FormData();
-  formData.append("login", login);
-  formData.append("trasa", trasa);
-  formData.append("tablica", tablice);
-  formData.append("dodatkowe", dodatkowe || "-");
-  formData.append("kody", JSON.stringify(dane));
-  formData.append("strona", "pz");
+      localStorage.setItem("trasa", trasa);
+      localStorage.setItem("tablica", tablica);
 
-  fetch(scriptURL, { method: "POST", body: formData })
-    .then(r => r.text())
-    .then(() => {
-      localStorage.removeItem("codesPZ");
+      const url = `${destination}?trasa=${encodeURIComponent(trasa)}&tablica=${encodeURIComponent(tablica)}`;
+      window.location.href = url;
+    }
+
+    function logout() {
+      localStorage.removeItem("login");
       localStorage.removeItem("trasa");
-      localStorage.removeItem("tablicaSam");
-      localStorage.removeItem("tablicaNacz");
       localStorage.removeItem("tablica");
-      sessionStorage.setItem("clearInputsAfterSend", "1");
-      window.location.href = "index.html";
-    })
-    .catch(err => {
-      document.getElementById("status").innerText = "❌ Błąd: " + err;
-    });
-}
+
+      document.getElementById("form-section").classList.add("hidden");
+      document.getElementById("kod").classList.remove("hidden");
+      document.getElementById("kod").value = "";
+      document.querySelector("button[onclick='checkLogin()']").style.display = "inline-block";
+    }
 
 document.addEventListener("DOMContentLoaded", () => {
-  const saved = localStorage.getItem("codesPZ");
-  if (saved) codes = JSON.parse(saved);
-  updateList();
+  const login = localStorage.getItem("login");
+  const trasa = localStorage.getItem("trasa");
+  const tablica = localStorage.getItem("tablica");
 
-  const login = localStorage.getItem("login") || "-";
-  const trasa = localStorage.getItem("trasa") || "-";
-  const tabSam = localStorage.getItem("tablicaSam") || "";
-  const tabNac = localStorage.getItem("tablicaNacz") || "";
-  document.getElementById("daneUzytkownika").innerHTML = `
-    <div><strong>${login}</strong></div>
-    <div>${trasa} – ${tabSam} / ${tabNac}</div>
-  `;
+  if (login) {
+    document.getElementById("user-name").textContent = login;
+    document.getElementById("form-section").classList.remove("hidden");
+    document.getElementById("kod").classList.add("hidden");
+    document.querySelector("button[onclick='checkLogin()']").style.display = "none";
+  }
+
+  if (trasa) document.getElementById("trasa").value = trasa;
+  if (tablica) document.getElementById("tablica").value = tablica;
 });
-</script>
+  </script>
+
 </body>
 </html>
+  Chce dodać jeszcze jedno pole tekstowe w który bedzie sie wpisywał numer rejestracyjny naczepy a w tym co jest teraz nr rejestracyjny samochodu wszystkie pola obowiązkowe
