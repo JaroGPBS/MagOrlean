@@ -278,15 +278,21 @@ function sendData() {
 
   fetch(scriptURL, { method: "POST", body: formData })
     .then(res => res.text())
-    .then(txt => {
-      alert("✅ Dane wysłane.");
-      codes = [];
-      localStorage.removeItem("codesPZ");
-      updateList();
-      localStorage.removeItem("trasa");
-      localStorage.removeItem("tablica");
-      window.location.href = "index.html";
-    })
+.then(txt => {
+  alert("✅ Dane wysłane.");
+  codes = [];
+  localStorage.removeItem("codesPZ");
+  updateList();
+
+  // ⬇️ Czyść wszystkie dane
+  localStorage.removeItem("trasa");
+  localStorage.removeItem("tablicaSam");
+  localStorage.removeItem("tablicaNacz");
+  localStorage.removeItem("tablica");
+  sessionStorage.setItem("clearInputsAfterSend", "1");
+
+  window.location.href = "index.html";
+})
     .catch(err => {
       document.getElementById("status").innerText = "❌ Błąd: " + err;
     });
@@ -359,6 +365,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 </body>
 </html>
+
 
 
 
