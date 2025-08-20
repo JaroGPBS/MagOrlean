@@ -54,7 +54,7 @@
     .back-button:hover { background-color: #777; }
 
     .data-display {
-      font-size: 0.7rem;
+      font-size: 0.9rem;
       background-color: #444;
       padding: 10px;
       border-radius: 8px;
@@ -74,7 +74,7 @@
     input { background-color: #222; color: #f5f5f5; }
     input::placeholder { color: #999; }
 
-    /* Kontener na skaner + przycisk */
+    /* Skaner */
     #reader { width: 100%; max-width: 400px; margin: 12px auto; }
     #scan-result { text-align: center; color: #00ff00; margin-bottom: 12px; }
 
@@ -82,6 +82,7 @@
     .cam-controls button { flex: 1; cursor: pointer; background:#555; color:#fff; }
     .cam-status { text-align:center; font-size:.9rem; color:#ccc; margin-bottom: 8px; }
 
+    /* Lista */
     ul { list-style: none; padding: 0; }
     li {
       display: flex; align-items: center; gap: 8px;
@@ -103,9 +104,7 @@
       background-color: #1c1c1c; color: #f5f5f5; border: 1px solid #555; padding: 6px;
     }
     .remove-btn { color: red; cursor: pointer; padding: 0 6px; font-weight: bold; }
-    .footer-logo { text-align: center; margin-top: 20px; }
-    .footer-logo img { width: 25%; max-width: 150px; height: auto; }
-    @media screen and (max-width: 600px) { .logo { font-size: 2rem; } }
+
     .list-header { display:flex; align-items:center; gap:8px; }
     .badge {
       display:inline-block; padding:2px 8px; border:1px solid #666; border-radius:999px;
@@ -123,7 +122,6 @@
 
     <div class="data-display" id="daneUzytkownika">Wczytywanie danych...</div>
 
-    <!-- PRZYCISK: skan jednorazowy -->
     <div class="cam-controls">
       <button id="scanOnceBtn">📷 SKANOWANIE</button>
     </div>
@@ -132,6 +130,7 @@
     <div id="reader"></div>
     <div id="scan-result"></div>
 
+    <!-- Ręczne dodawanie: w jednej linii, przycisk 15%, niższe -->
     <div style="display:flex; gap:6px; margin:6px 0;">
       <input type="text" id="manualInput" placeholder="Dodaj kod ręcznie" autocomplete="off" style="flex:1; padding:5px; font-size:0.9rem;">
       <button onclick="addManual()" style="width:15%; min-width:80px; padding:5px; font-size:0.9rem;">Dodaj S/N</button>
@@ -166,9 +165,9 @@ const allowed = [
 
 const scriptURL = "https://script.google.com/macros/s/AKfycbzNy43SKVLV4iQNDwAT_FssmZRymhloaYAWFxWgMja1rCR0xJTmXaLU_yYbnvx2kq0Ukw/exec";
 
-let codes = []; // [{ value, note, nok }], najnowszy na indeksie 0
+let codes = []; // [{ value, note, nok }]
 
-// WebAudio „beep” – tworzymy po pierwszej interakcji (mobile)
+// Beep + wibracja
 let audioCtx = null;
 function ensureAudio() {
   if (!audioCtx) {
@@ -180,8 +179,7 @@ function playBeep() {
   if (!audioCtx) return;
   const o = audioCtx.createOscillator();
   const g = audioCtx.createGain();
-  o.type = "sine";
-  o.frequency.value = 880;
+  o.type = "sine"; o.frequency.value = 880;
   g.gain.value = 0.0001;
   o.connect(g); g.connect(audioCtx.destination);
   const now = audioCtx.currentTime;
@@ -242,7 +240,6 @@ function updateList() {
     nokLabel.style.alignItems = "center";
     nokLabel.style.gap = "4px";
     nokLabel.style.marginLeft = "auto";
-    /* (jeśli chcesz mniejszą czcionkę NOK, dodaj: nokLabel.style.fontSize="0.75rem";) */
     nokLabel.appendChild(nokCheckbox);
     nokLabel.appendChild(document.createTextNode("NOK"));
 
@@ -281,7 +278,7 @@ function removeCode(index) {
   updateList();
 }
 
-// ---- SKANOWANIE: 1 klik = 1 skan ----
+// ---- SKAN 1x ----
 let html5Qr = null;
 let selectedCamId = null;
 
@@ -299,14 +296,14 @@ async function stopScanner() {
 }
 
 async function scanOnce() {
-  ensureAudio(); // wymagana interakcja na mobile
+  ensureAudio();
   if (!html5Qr) html5Qr = new Html5Qrcode("reader");
   if (!selectedCamId) selectedCamId = await pickBackCamera();
 
   try {
     await html5Qr.start(
       selectedCamId,
-      { fps: 10, qrbox: 250, },
+      { fps: 10, qrbox: 250 },
       text => {
         const val = (text || "").toUpperCase().trim();
         if (!val) return;
@@ -314,22 +311,21 @@ async function scanOnce() {
         if (!exists) {
           codes.unshift({ value: val, note: "", nok: false });
           saveCodes(); updateList();
-          document.getElementById("scan-result").innerText = "Zeskanowano: " + val;
-          playBeep(); buzz();
           const sr = document.getElementById("scan-result");
+          sr.innerText = "Zeskanowano: " + val;
+          playBeep(); buzz();
           sr.style.transition = "background-color .15s";
           sr.style.backgroundColor = "#1e3a1e";
           setTimeout(() => sr.style.backgroundColor = "transparent", 180);
         }
-        stopScanner(); // ⛔ zatrzymaj po 1 odczycie
+        stopScanner();
       },
-      () => {} // onScanFailure – ignorujemy
+      () => {}
     );
   } catch (e) {
     document.getElementById("scan-result").innerText = "❌ " + e;
   }
 }
-
 document.getElementById("scanOnceBtn").addEventListener("click", scanOnce);
 
 // ---- Wysyłka ----
@@ -337,7 +333,7 @@ function sendData() {
   const login = localStorage.getItem("login") || "";
   const trasa = localStorage.getItem("trasa") || "";
 
-  // ⬇️ NOWE: odczytaj oba pola rejestracyjne, złącz lub fallback do starego 'tablica'
+  // >> Odczyt dwóch pól + fallback
   const tabSam = localStorage.getItem("tablicaSamochodu") || "";
   const tabNac = localStorage.getItem("tablicaNaczepy") || "";
   const legacy = localStorage.getItem("tablica") || "";
@@ -355,8 +351,8 @@ function sendData() {
   }
   if (!confirm("Czy na pewno chcesz wysłać dane?")) return;
 
+  // Format: TYP - KOD (- NOK)
   const finalData = codes.map(c => {
-    // format: TYP - KOD (- NOK jeśli zaznaczono)
     let line = `${c.note} - ${c.value}`;
     if (c.nok) line += " - NOK";
     return line;
@@ -365,7 +361,7 @@ function sendData() {
   const formData = new FormData();
   formData.append("login", login);
   formData.append("trasa", trasa);
-  formData.append("tablica", tabliceWysylka);     // ⬅️ wysyłamy złączone SAMOCHÓD / NACZEPA
+  formData.append("tablica", tabliceWysylka);
   formData.append("dodatkowe", dodatkoweInfo || "-");
   formData.append("kody", JSON.stringify(finalData));
   formData.append("strona", "pz");
@@ -378,11 +374,12 @@ function sendData() {
       localStorage.removeItem("codesPZ");
       updateList();
 
-      // ⬇️ NOWE: wyczyść oba pola rejestracyjne + stary klucz dla zgodności
+      // Czyść obie rejestracje + stary klucz i oznacz do czyszczenia inputów na index.html
       localStorage.removeItem("trasa");
       localStorage.removeItem("tablicaSamochodu");
       localStorage.removeItem("tablicaNaczepy");
-      localStorage.removeItem("tablica");
+      localStorage.removeItem("tablica"); // legacy
+      sessionStorage.setItem("clearInputsAfterSend", "1");
 
       stopScanner();
       window.location.href = "index.html";
@@ -400,7 +397,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const login = localStorage.getItem("login") || "brak";
   const trasa = localStorage.getItem("trasa") || "brak";
 
-  // ⬇️ NOWE: preferuj dwa pola, fallback do starego 'tablica'
   const tabSam = localStorage.getItem("tablicaSamochodu") || "";
   const tabNac = localStorage.getItem("tablicaNaczepy") || "";
   const legacy = localStorage.getItem("tablica") || "brak";
@@ -413,7 +409,6 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 </script>
 
-<!-- LISTA typów dla podpowiedzi -->
 <datalist id="typList">
   <option value="FM">
   <option value="LQ">
@@ -437,5 +432,3 @@ document.addEventListener("DOMContentLoaded", () => {
 
 </body>
 </html>
-
-
