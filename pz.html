@@ -118,8 +118,10 @@
 <div id="reader"></div>
 <div id="scan-result">Zeskanuj kod QR...</div>
 
-<input type="text" id="manualInput" placeholder="Dodaj kod ręcznie" autocomplete="off">
-<button onclick="addManual()">Dodaj do listy</button>
+<div style="display: flex; gap: 8px; margin: 10px 0;">
+  <input type="text" id="manualInput" placeholder="Dodaj kod ręcznie" autocomplete="off" style="flex: 1; padding: 8px; font-size: 1rem;">
+  <button onclick="addManual()" style="width: 20%; min-width: 80px; font-size: 1rem;">Dodaj S/N</button>
+</div>
 
 <div class="list-header">
   <h3 style="margin:0;">Lista kodów</h3>
@@ -365,6 +367,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 </body>
 </html>
+
 
 
 
