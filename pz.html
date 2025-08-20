@@ -301,7 +301,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const login = localStorage.getItem("login") || "brak";
   const trasa = localStorage.getItem("trasa") || "brak";
   const tablica = localStorage.getItem("tablica") || "brak";
-  document.getElementById("daneUzytkownika").innerHTML = `${login}<br>${trasa}<br>${tablica}`;
+  document.getElementById("daneUzytkownika").innerHTML = `${login}  -  ${trasa}  -  ${tablica}`;
 
   const html5Qr = new Html5Qrcode("reader");
 
@@ -357,4 +357,5 @@ document.addEventListener("DOMContentLoaded", () => {
 
 </body>
 </html>
+
 
