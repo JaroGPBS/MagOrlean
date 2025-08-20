@@ -133,8 +133,10 @@
     <div id="reader"></div>
     <div id="scan-result"></div>
 
-    <input type="text" id="manualInput" placeholder="Dodaj kod ręcznie" autocomplete="off">
-    <button onclick="addManual()">Dodaj do listy</button>
+    <div style="display:flex; gap:6px; margin:6px 0;">
+      <input type="text" id="manualInput" placeholder="Dodaj kod ręcznie" autocomplete="off" style="flex:1;">
+      <button onclick="addManual()" style="width:15%; min-width:80px;">Dodaj S/N</button>
+    </div>
 
     <div class="list-header">
       <h3 style="margin:0;">Lista kodów</h3>
@@ -415,6 +417,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 </body>
 </html>
+
 
 
 
