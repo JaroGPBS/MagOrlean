@@ -53,7 +53,6 @@
     }
     .back-button:hover { background-color: #777; }
 
-    /* Prost y styl danych – mniejsza czcionka + jedna linia */
     .data-display {
       font-size: 0.9rem;
       background-color: #444;
@@ -138,9 +137,8 @@
       <button onclick="addManual()" style="width:15%; min-width:80px; padding:5px; font-size:0.9rem;">Dodaj S/N</button>
     </div>
 
-
     <div class="list-header">
-      <h3 style="margin:0;">Zeskanowałeś</h3>
+      <h3 style="margin:0;">Lista kodów</h3>
       <span class="badge" id="codeCount">0</span>
     </div>
     <ul id="codeList"></ul>
@@ -244,7 +242,7 @@ function updateList() {
     nokLabel.style.alignItems = "center";
     nokLabel.style.gap = "4px";
     nokLabel.style.marginLeft = "auto";
-    nokLabel.style.fontSize = "0.75rem"; // mniejsza czcionka NOK
+    /* (jeśli chcesz mniejszą czcionkę NOK, dodaj: nokLabel.style.fontSize="0.75rem";) */
     nokLabel.appendChild(nokCheckbox);
     nokLabel.appendChild(document.createTextNode("NOK"));
 
@@ -328,6 +326,7 @@ async function scanOnce() {
       () => {} // onScanFailure – ignorujemy
     );
   } catch (e) {
+    document.getElementById("scan-result").innerText = "❌ " + e;
   }
 }
 
@@ -337,10 +336,16 @@ document.getElementById("scanOnceBtn").addEventListener("click", scanOnce);
 function sendData() {
   const login = localStorage.getItem("login") || "";
   const trasa = localStorage.getItem("trasa") || "";
-  const tablica = localStorage.getItem("tablica") || "";
+
+  // ⬇️ NOWE: odczytaj oba pola rejestracyjne, złącz lub fallback do starego 'tablica'
+  const tabSam = localStorage.getItem("tablicaSamochodu") || "";
+  const tabNac = localStorage.getItem("tablicaNaczepy") || "";
+  const legacy = localStorage.getItem("tablica") || "";
+  const tabliceWysylka = (tabSam || tabNac) ? `${tabSam} / ${tabNac}` : legacy;
+
   const dodatkoweInfo = document.getElementById("dodatkoweInfo").value.trim();
 
-  if (!login || !trasa || !tablica || codes.length === 0) {
+  if (!login || !trasa || !tabliceWysylka || codes.length === 0) {
     alert("Brakuje danych lub lista kodów jest pusta.");
     return;
   }
@@ -357,11 +362,10 @@ function sendData() {
     return line;
   });
 
-
   const formData = new FormData();
   formData.append("login", login);
   formData.append("trasa", trasa);
-  formData.append("tablica", tablica);
+  formData.append("tablica", tabliceWysylka);     // ⬅️ wysyłamy złączone SAMOCHÓD / NACZEPA
   formData.append("dodatkowe", dodatkoweInfo || "-");
   formData.append("kody", JSON.stringify(finalData));
   formData.append("strona", "pz");
@@ -373,8 +377,13 @@ function sendData() {
       codes = [];
       localStorage.removeItem("codesPZ");
       updateList();
+
+      // ⬇️ NOWE: wyczyść oba pola rejestracyjne + stary klucz dla zgodności
       localStorage.removeItem("trasa");
+      localStorage.removeItem("tablicaSamochodu");
+      localStorage.removeItem("tablicaNaczepy");
       localStorage.removeItem("tablica");
+
       stopScanner();
       window.location.href = "index.html";
     })
@@ -390,12 +399,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const login = localStorage.getItem("login") || "brak";
   const trasa = localStorage.getItem("trasa") || "brak";
-  const tablica = localStorage.getItem("tablica") || "brak";
 
-  // Jedna linia: TRASA – TABLICE
+  // ⬇️ NOWE: preferuj dwa pola, fallback do starego 'tablica'
+  const tabSam = localStorage.getItem("tablicaSamochodu") || "";
+  const tabNac = localStorage.getItem("tablicaNaczepy") || "";
+  const legacy = localStorage.getItem("tablica") || "brak";
+  const tabliceWidok = (tabSam || tabNac) ? `${tabSam} / ${tabNac}` : legacy;
+
   document.getElementById("daneUzytkownika").innerHTML = `
     <div><strong>${login}</strong></div>
-    <div>${trasa} – ${tablica}</div>
+    <div>${trasa} – ${tabliceWidok}</div>
   `;
 });
 </script>
@@ -424,11 +437,3 @@ document.addEventListener("DOMContentLoaded", () => {
 
 </body>
 </html>
-
-
-
-
-
-
-
-
