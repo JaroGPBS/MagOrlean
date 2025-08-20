@@ -74,7 +74,6 @@
     input { background-color: #222; color: #f5f5f5; }
     input::placeholder { color: #999; }
 
-    /* Skaner */
     #reader { width: 100%; max-width: 400px; margin: 12px auto; }
     #scan-result { text-align: center; color: #00ff00; margin-bottom: 12px; }
 
@@ -82,39 +81,35 @@
     .cam-controls button { flex: 1; cursor: pointer; background:#555; color:#fff; }
     .cam-status { text-align:center; font-size:.9rem; color:#ccc; margin-bottom: 8px; }
 
-    /* Lista */
     ul { list-style: none; padding: 0; }
     li {
       display: flex; align-items: center; gap: 8px;
       padding: 6px 0; border-bottom: 1px solid #666;
     }
     .note-input {
-      width: 20%;
-      min-width: 40px;
-      padding: 4px;
-      border: 1px solid #555;
-      border-radius: 4px;
-      font-size: 0.7rem;
+      width: 20%; min-width: 40px;
+      padding: 4px; font-size: 0.7rem;
+      border: 1px solid #555; border-radius: 4px;
+      background-color: #1c1c1c; color: #f5f5f5;
       text-transform: uppercase;
-      background-color: #1c1c1c;
-      color: #f5f5f5;
     }
     .code-text {
       flex: 1; font-size: 0.95rem; word-break: break-word;
-      background-color: #1c1c1c; color: #f5f5f5; border: 1px solid #555; padding: 6px;
+      background-color: #1c1c1c; color: #f5f5f5;
+      border: 1px solid #555; padding: 6px;
     }
     .remove-btn { color: red; cursor: pointer; padding: 0 6px; font-weight: bold; }
 
     .list-header { display:flex; align-items:center; gap:8px; }
-.badge {
-  display:inline-block;
-  padding:2px 8px;
-  border:1px solid #666;
-  border-radius:999px;
-  font-size:.85rem;
-  background:#222;
-  color:#f5f5f5;
-}
+    .badge {
+      display:inline-block;
+      padding:2px 8px;
+      border:1px solid #666;
+      border-radius:999px;
+      font-size:.85rem;
+      background:#222;
+      color:#f5f5f5;
+    }
 
     .footer-logo {
       margin-top: 20px;
@@ -125,7 +120,7 @@
       max-width: 150px;
       height: auto;
     }
-</style>
+  </style>
 </head>
 <body>
 <div class="form-wrapper">
@@ -136,16 +131,13 @@
     </div>
 
     <div class="data-display" id="daneUzytkownika">Wczytywanie danych...</div>
-
     <div class="cam-controls">
       <button id="scanOnceBtn">📷 SKANOWANIE</button>
     </div>
     <div class="cam-status" id="camStatus"></div>
-
     <div id="reader"></div>
     <div id="scan-result"></div>
 
-    <!-- Ręczne dodawanie: w jednej linii, przycisk 15%, niższe -->
     <div style="display:flex; gap:6px; margin:6px 0;">
       <input type="text" id="manualInput" placeholder="Dodaj kod ręcznie" autocomplete="off" style="flex:1; padding:5px; font-size:0.9rem;">
       <button onclick="addManual()" style="width:15%; min-width:80px; padding:5px; font-size:0.9rem;">Dodaj S/N</button>
@@ -162,199 +154,26 @@
     <p id="status"></p>
   </div>
 
-<div class="footer-logo">
-  <p style="margin-bottom: 6px; font-size: 0.9rem; color: #aaa;">Created by Jaro</p>
-  <img src="https://gpbs.pl/assets/images/xlogo_wh.png.pagespeed.ic.3FdfUvX7s-.webp" alt="Logo GPBS">
-</div>
-
+  <div class="footer-logo">
+    <p style="margin-bottom: 6px; font-size: 0.9rem; color: #aaa;">Created by Jaro</p>
+    <img src="https://gpbs.pl/assets/images/xlogo_wh.png.pagespeed.ic.3FdfUvX7s-.webp" alt="Logo GPBS">
+  </div>
 </div>
 
 <script>
 function goBack() { window.location.href = "index.html"; }
 
-// DOZWOLONE typy
-const allowed = [
-  "FM","LQ","RQ","XS","ODL","ODR","CU","DUO","HICU","HIDUO","HIUNO",
-  "FMB","LQB","RQB",
-  "FMBRBQ","ODBRBQ","CUBQ","DUOBQ"
-];
+const allowed = ["FM","LQ","RQ","XS","ODL","ODR","CU","DUO","HICU","HIDUO","HIUNO","FMB","LQB","RQB","FMBRBQ","ODBRBQ","CUBQ","DUOBQ"];
+const scriptURL = "https://script.google.com/macros/s/YOUR_SCRIPT_ID_HERE/exec";
+let codes = [];
 
-const scriptURL = "https://script.google.com/macros/s/AKfycbzNy43SKVLV4iQNDwAT_FssmZRymhloaYAWFxWgMja1rCR0xJTmXaLU_yYbnvx2kq0Ukw/exec";
-
-let codes = []; // [{ value, note, nok }]
-
-// Beep + wibracja
-let audioCtx = null;
-function ensureAudio() {
-  if (!audioCtx) {
-    try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
-    catch(e) { audioCtx = null; }
-  }
-}
-function playBeep() {
-  if (!audioCtx) return;
-  const o = audioCtx.createOscillator();
-  const g = audioCtx.createGain();
-  o.type = "sine"; o.frequency.value = 880;
-  g.gain.value = 0.0001;
-  o.connect(g); g.connect(audioCtx.destination);
-  const now = audioCtx.currentTime;
-  g.gain.exponentialRampToValueAtTime(0.2, now + 0.01);
-  g.gain.exponentialRampToValueAtTime(0.0001, now + 0.18);
-  o.start(now); o.stop(now + 0.2);
-}
-function buzz() { if (navigator.vibrate) navigator.vibrate(50); }
-
-function saveCodes() { localStorage.setItem("codesPZ", JSON.stringify(codes)); }
-
-function updateList() {
-  const list = document.getElementById("codeList");
-  const count = document.getElementById("codeCount");
-  list.innerHTML = "";
-  count.textContent = String(codes.length);
-
-  codes.forEach((item, index) => {
-    const li = document.createElement("li");
-
-    const inputNote = document.createElement("input");
-    inputNote.type = "text";
-    inputNote.placeholder = "TYP";
-    inputNote.className = "note-input";
-    inputNote.value = item.note || "";
-    inputNote.setAttribute("list", "typList");
-    inputNote.style.borderColor = item.note && allowed.includes(item.note) ? "#0f0" : "#555";
-    inputNote.oninput = () => {
-      const val = inputNote.value.toUpperCase().trim();
-      inputNote.value = val;
-      codes[index].note = val;
-      inputNote.style.borderColor = allowed.includes(val) ? "#0f0" : "red";
-      saveCodes();
-    };
-
-    const codeText = document.createElement("input");
-    codeText.type = "text";
-    codeText.value = item.value;
-    codeText.className = "code-text";
-    codeText.oninput = () => {
-      codes[index].value = codeText.value.toUpperCase().trim();
-      saveCodes();
-    };
-
-    const nokCheckbox = document.createElement("input");
-    nokCheckbox.type = "checkbox";
-    nokCheckbox.checked = !!item.nok;
-    nokCheckbox.style.width = "18px";
-    nokCheckbox.style.height = "18px";
-    nokCheckbox.style.cursor = "pointer";
-    nokCheckbox.onchange = () => {
-      codes[index].nok = nokCheckbox.checked;
-      saveCodes();
-    };
-
-    const nokLabel = document.createElement("label");
-    nokLabel.style.display = "flex";
-    nokLabel.style.alignItems = "center";
-    nokLabel.style.gap = "4px";
-    nokLabel.style.marginLeft = "auto";
-    nokLabel.appendChild(nokCheckbox);
-    nokLabel.appendChild(document.createTextNode("NOK"));
-
-    const remove = document.createElement("span");
-    remove.className = "remove-btn";
-    remove.textContent = "✕";
-    remove.title = "Usuń";
-    remove.onclick = () => removeCode(index);
-
-    li.appendChild(inputNote);
-    li.appendChild(codeText);
-    li.appendChild(nokLabel);
-    li.appendChild(remove);
-    list.appendChild(li);
-  });
-}
-
-function addManual() {
-  const input = document.getElementById("manualInput");
-  const val = input.value.trim().toUpperCase();
-  if (!val) return;
-
-  const exists = codes.find(c => (c.value || "").toUpperCase().trim() === val);
-  if (!exists) {
-    codes.unshift({ value: val, note: "", nok: false });
-    saveCodes();
-    updateList();
-    playBeep(); buzz();
-  }
-  input.value = "";
-}
-
-function removeCode(index) {
-  codes.splice(index, 1);
-  saveCodes();
-  updateList();
-}
-
-// ---- SKAN 1x ----
-let html5Qr = null;
-let selectedCamId = null;
-
-async function pickBackCamera() {
-  const cams = await Html5Qrcode.getCameras();
-  if (!cams || !cams.length) throw new Error("Nie wykryto kamery.");
-  const back = cams.find(c => (c.label || "").toLowerCase().includes("back")
-                           || (c.label || "").toLowerCase().includes("environment"));
-  return (back || cams[0]).id;
-}
-
-async function stopScanner() {
-  if (!html5Qr) return;
-  try { await html5Qr.stop(); await html5Qr.clear(); } catch(e) {}
-}
-
-async function scanOnce() {
-  ensureAudio();
-  if (!html5Qr) html5Qr = new Html5Qrcode("reader");
-  if (!selectedCamId) selectedCamId = await pickBackCamera();
-
-  try {
-    await html5Qr.start(
-      selectedCamId,
-      { fps: 10, qrbox: 250 },
-      text => {
-        const val = (text || "").toUpperCase().trim();
-        if (!val) return;
-        const exists = codes.find(c => (c.value || "").toUpperCase().trim() === val);
-        if (!exists) {
-          codes.unshift({ value: val, note: "", nok: false });
-          saveCodes(); updateList();
-          const sr = document.getElementById("scan-result");
-          sr.innerText = "Zeskanowano: " + val;
-          playBeep(); buzz();
-          sr.style.transition = "background-color .15s";
-          sr.style.backgroundColor = "#1e3a1e";
-          setTimeout(() => sr.style.backgroundColor = "transparent", 180);
-        }
-        stopScanner();
-      },
-      () => {}
-    );
-  } catch (e) {
-    document.getElementById("scan-result").innerText = "❌ " + e;
-  }
-}
-document.getElementById("scanOnceBtn").addEventListener("click", scanOnce);
-
-// ---- Wysyłka ----
 function sendData() {
   const login = localStorage.getItem("login") || "";
   const trasa = localStorage.getItem("trasa") || "";
-
-  // >> Odczyt dwóch pól + fallback
   const tabSam = localStorage.getItem("tablicaSamochodu") || "";
   const tabNac = localStorage.getItem("tablicaNaczepy") || "";
   const legacy = localStorage.getItem("tablica") || "";
   const tabliceWysylka = (tabSam || tabNac) ? `${tabSam} / ${tabNac}` : legacy;
-
   const dodatkoweInfo = document.getElementById("dodatkoweInfo").value.trim();
 
   if (!login || !trasa || !tabliceWysylka || codes.length === 0) {
@@ -367,9 +186,10 @@ function sendData() {
   }
   if (!confirm("Czy na pewno chcesz wysłać dane?")) return;
 
-  // Format: TYP - KOD (- NOK)
   const finalData = codes.map(c => {
-    let line = `${c.note} - ${c.value}`;
+    const typ = (c.note || "").trim().toUpperCase();
+    const kod = (c.value || "").trim().toUpperCase();
+    let line = `${typ} - ${kod}`;
     if (c.nok) line += " - NOK";
     return line;
   });
@@ -389,14 +209,11 @@ function sendData() {
       codes = [];
       localStorage.removeItem("codesPZ");
       updateList();
-
-      // Czyść obie rejestracje + stary klucz i oznacz do czyszczenia inputów na index.html
       localStorage.removeItem("trasa");
       localStorage.removeItem("tablicaSamochodu");
       localStorage.removeItem("tablicaNaczepy");
-      localStorage.removeItem("tablica"); // legacy
+      localStorage.removeItem("tablica");
       sessionStorage.setItem("clearInputsAfterSend", "1");
-
       stopScanner();
       window.location.href = "index.html";
     })
@@ -404,51 +221,6 @@ function sendData() {
       document.getElementById("status").innerText = "❌ Błąd: " + err;
     });
 }
-
-document.addEventListener("DOMContentLoaded", () => {
-  const savedCodes = localStorage.getItem("codesPZ");
-  if (savedCodes) codes = JSON.parse(savedCodes);
-  updateList();
-
-  const login = localStorage.getItem("login") || "brak";
-  const trasa = localStorage.getItem("trasa") || "brak";
-
-  const tabSam = localStorage.getItem("tablicaSamochodu") || "";
-  const tabNac = localStorage.getItem("tablicaNaczepy") || "";
-  const legacy = localStorage.getItem("tablica") || "brak";
-  const tabliceWidok = (tabSam || tabNac) ? `${tabSam} / ${tabNac}` : legacy;
-
-  document.getElementById("daneUzytkownika").innerHTML = `
-    <div><strong>${login}</strong></div>
-    <div>${trasa} – ${tabliceWidok}</div>
-  `;
-});
 </script>
-
-<datalist id="typList">
-  <option value="FM">
-  <option value="LQ">
-  <option value="RQ">
-  <option value="XS">
-  <option value="CU">
-  <option value="DUO">
-  <option value="HICU">
-  <option value="HIDUO">
-  <option value="HIUNO">
-  <option value="ODL">
-  <option value="ODR">
-  <option value="FMB">
-  <option value="LQB">
-  <option value="RQB">
-  <option value="FMBRBQ">
-  <option value="ODBRBQ">
-  <option value="CUBQ">
-  <option value="DUOBQ">
-</datalist>
-
 </body>
 </html>
-
-
-
-
