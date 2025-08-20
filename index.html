@@ -216,23 +216,56 @@
     }
 
     document.addEventListener("DOMContentLoaded", () => {
-      const login = localStorage.getItem("login");
-      const trasa = localStorage.getItem("trasa");
-      const tablicaSam = localStorage.getItem("tablicaSam");
-      const tablicaNacz = localStorage.getItem("tablicaNacz");
+    // --- Nowa część: czyść po powrocie z pz.html ---
+    if (sessionStorage.getItem("clearInputsAfterSend") === "1") {
+    sessionStorage.removeItem("clearInputsAfterSend");
 
-      if (login) {
-        document.getElementById("user-name").textContent = login;
-        document.getElementById("form-section").classList.remove("hidden");
-        document.getElementById("kod").classList.add("hidden");
-        document.querySelector("button[onclick='checkLogin()']").style.display = "none";
-      }
+    // Usuń zapisane wartości
+    localStorage.removeItem("trasa");
+    localStorage.removeItem("tablicaSam");
+    localStorage.removeItem("tablicaNacz");
 
-      if (trasa) document.getElementById("trasa").value = trasa;
-      if (tablicaSam) document.getElementById("tablicaSam").value = tablicaSam;
-      if (tablicaNacz) document.getElementById("tablicaNacz").value = tablicaNacz;
-    });
-  </script>
+    // Wyczyść widoczne pola (jeśli istnieją)
+    const trasaEl  = document.getElementById("trasa");
+    const tabSamEl = document.getElementById("tablicaSam");
+    const tabNacEl = document.getElementById("tablicaNacz");
+    if (trasaEl)  trasaEl.value  = "";
+    if (tabSamEl) tabSamEl.value = "";
+    if (tabNacEl) tabNacEl.value = "";
+    }
+
+  // --- Twój dotychczasowy kod (bez zmian) ---
+  const login = localStorage.getItem("login");
+  const trasa = localStorage.getItem("trasa");
+  const tablicaSam = localStorage.getItem("tablicaSam");
+  const tablicaNacz = localStorage.getItem("tablicaNacz");
+
+  if (login) {
+    document.getElementById("user-name").textContent = login;
+    document.getElementById("form-section").classList.remove("hidden");
+    document.getElementById("kod").classList.add("hidden");
+    document.querySelector("button[onclick='checkLogin()']").style.display = "none";
+  }
+
+  if (trasa) document.getElementById("trasa").value = trasa;
+  if (tablicaSam) document.getElementById("tablicaSam").value = tablicaSam;
+  if (tablicaNacz) document.getElementById("tablicaNacz").value = tablicaNacz;
+});
+
+// dodatkowo: obsłuż powrót z pamięci podręcznej (gest „wstecz”)
+window.addEventListener("pageshow", (ev) => {
+  if (ev.persisted) {
+    const trasaEl  = document.getElementById("trasa");
+    const tabSamEl = document.getElementById("tablicaSam");
+    const tabNacEl = document.getElementById("tablicaNacz");
+    if (trasaEl)  trasaEl.value  = "";
+    if (tabSamEl) tabSamEl.value = "";
+    if (tabNacEl) tabNacEl.value = "";
+  }
+});
+</script>
+
 
 </body>
 </html>
+
