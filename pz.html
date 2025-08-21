@@ -266,11 +266,12 @@ function sendData() {
   if (!confirm("Czy na pewno chcesz wysłać dane?")) return;
 
 const finalData = codes.map(c => {
-  const kod = (c.value || "").trim().toUpperCase();
-  const typ = (c.note || "").trim().toUpperCase();
+  const typ = typeof c.note === "string" ? c.note.trim().toUpperCase() : "BRAK_TYP";
+  const kod = typeof c.value === "string" ? c.value.trim().toUpperCase() : "BRAK_KOD";
   const status = c.nok ? " - NOK" : "";
   return `${typ} - ${kod}${status}`;
 });
+
 
 
 
@@ -369,6 +370,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 </body>
 </html>
+
 
 
 
