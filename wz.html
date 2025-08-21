@@ -303,11 +303,15 @@
         .then(txt => {
           alert("✅ Dane wysłane.");
           codes = [];
-          localStorage.removeItem("codesWZ");
-          updateList();
-          localStorage.removeItem("trasa");
-          localStorage.removeItem("tablica");
-          window.location.href = "index.html";
+      localStorage.removeItem("codesWZ");
+      updateList();
+
+      localStorage.removeItem("trasa");
+      localStorage.removeItem("tablica");
+      localStorage.removeItem("tablicaSam");
+      localStorage.removeItem("tablicaNacz");
+
+      window.location.href = "index.html";
         })
         .catch(err => {
           document.getElementById("status").innerText = "❌ Błąd: " + err;
@@ -378,3 +382,4 @@
 
 </body>
 </html>
+
