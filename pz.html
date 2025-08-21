@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="pl">
 <head>
   <meta charset="UTF-8">
@@ -52,19 +51,17 @@
       cursor: pointer;
       text-align: center;
     }
-    .back-button:hover {
-      background-color: #777;
+    .back-button:hover { background-color: #777; }
+    .data-display {
+      font-size: 0.9rem;
+      background-color: #444;
+      padding: 8px 10px;
+      border-radius: 6px;
+      margin-bottom: 16px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
-.data-display {
-  font-size: 0.9rem;
-  background-color: #444;
-  padding: 8px 10px;
-  border-radius: 6px;
-  margin-bottom: 16px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
     input, button {
       width: 100%;
       padding: 10px;
@@ -114,24 +111,25 @@
       <div class="logo">PeZetka</div>
       <button class="back-button" onclick="goBack()">← Cofnij</button>
     </div>
-<div class="data-display" id="daneUzytkownika">Wczytywanie danych...</div>
-<div id="reader"></div>
-<div id="scan-result">Zeskanuj kod QR...</div>
 
-<div style="display: flex; gap: 8px; margin: 10px 0;">
-  <input type="text" id="manualInput" placeholder="Dodaj kod ręcznie" autocomplete="off" style="flex: 1; padding: 4px; font-size: 1rem;">
-  <button onclick="addManual()" style="width: 20%; min-width: 80px; font-size: 0.8rem; padding: 4px;">Dodaj S/N</button>
-</div>
+    <div class="data-display" id="daneUzytkownika">Wczytywanie danych...</div>
+    <div id="reader"></div>
+    <div id="scan-result">Zeskanuj kod QR...</div>
 
-<div class="list-header">
-  <h3 style="margin:0;">Liczba modułów</h3>
-  <span class="badge" id="codeCount">0</span>
-</div>
-<ul id="codeList"></ul>
+    <div style="display: flex; gap: 8px; margin: 10px 0;">
+      <input type="text" id="manualInput" placeholder="Dodaj kod ręcznie" autocomplete="off" style="flex: 1; padding: 4px; font-size: 1rem;">
+      <button onclick="addManual()" style="width: 20%; min-width: 80px; font-size: 0.8rem; padding: 4px;">Dodaj S/N</button>
+    </div>
 
-<input type="text" id="dodatkoweInfo" placeholder="Dodatkowe informacje (opcjonalne)" autocomplete="off">
-<button onclick="sendData()">Wyślij dane</button>
-<p id="status"></p>
+    <div class="list-header">
+      <h3 style="margin:0;">Liczba modułów</h3>
+      <span class="badge" id="codeCount">0</span>
+    </div>
+    <ul id="codeList"></ul>
+
+    <input type="text" id="dodatkoweInfo" placeholder="Dodatkowe informacje (opcjonalne)" autocomplete="off">
+    <button onclick="sendData()">Wyślij dane</button>
+    <p id="status"></p>
   </div>
 
   <div class="footer-logo">
@@ -145,14 +143,9 @@ function goBack() {
   window.location.href = "index.html";
 }
 
-// NOWA lista dozwolonych typów (zamiany + dodanie BQCUI)
-const allowed = [
-  "FM","LQ","RQ","XS","ODL","ODR","CU","DUO","HICU","HIDUO","FMB","LQB","RQB",
-  "BQCUO","BQEXO","BQEXI","BQCUI" // <-- nowe/zmienione
-];
-
+const allowed = ["FM","LQ","RQ","XS","ODL","ODR","CU","DUO","HICU","HIDUO","FMB","LQB","RQB","FMBRBQ","ODBRBQ","CUBQ","DUOBQ","HIUNO"];
 const scriptURL = "https://script.google.com/macros/s/AKfycbzNy43SKVLV4iQNDwAT_FssmZRymhloaYAWFxWgMja1rCR0xJTmXaLU_yYbnvx2kq0Ukw/exec";
-let codes = []; // [{ value, note, nok }], najnowszy na indeksie 0
+let codes = [];
 
 function saveCodes() {
   localStorage.setItem("codesPZ", JSON.stringify(codes));
@@ -173,9 +166,7 @@ function updateList() {
     inputNote.className = "note-input";
     inputNote.value = item.note || "";
     inputNote.setAttribute("list", "typList");
-    // kolor obramowania zgodnie z allowed
     inputNote.style.borderColor = item.note && allowed.includes(item.note) ? "#0f0" : "#555";
-
     inputNote.oninput = () => {
       const val = inputNote.value.toUpperCase().trim();
       inputNote.value = val;
@@ -229,12 +220,10 @@ function updateList() {
 function addManual() {
   const input = document.getElementById("manualInput");
   const val = input.value.trim().toUpperCase();
-
   if (!val || val.length < 3) {
     alert("Kod zbyt krótki lub pusty.");
     return;
   }
-
   const exists = codes.find(c => (c.value || "").toUpperCase().trim() === val);
   if (!exists) {
     codes.unshift({ value: val, note: "", nok: false });
@@ -268,22 +257,10 @@ function sendData() {
 
   if (!confirm("Czy na pewno chcesz wysłać dane?")) return;
 
-const finalData = [];
-
-for (let i = 0; i < codes.length; i++) {
-  const kod = (codes[i].value || "").toString().trim().toUpperCase();
-  const typ = (codes[i].note || "").toString().trim().toUpperCase();
-  const status = codes[i].nok ? " - NOK" : "";
-
-  if (!typ || !kod) {
-    console.warn(`❌ Pominięto pusty kod lub typ przy pozycji ${i}:`, codes[i]);
-    continue; // pomiń błędne wpisy
-  }
-
-  finalData.push(`${typ} - ${kod}${status}`);
-}
-
-
+  const finalData = codes.map((c, i) => {
+    const kod = (c.value || "").toString().trim().toUpperCase();
+    const typ = (c.note || "").toString().trim().toUpperCase();
+    const status = c.nok ? " - NOK" : "";
     return `${typ} - ${kod}${status}`;
   });
 
@@ -302,13 +279,11 @@ for (let i = 0; i < codes.length; i++) {
       codes = [];
       localStorage.removeItem("codesPZ");
       updateList();
-
       localStorage.removeItem("trasa");
       localStorage.removeItem("tablica");
       localStorage.removeItem("tablicaSam");
       localStorage.removeItem("tablicaNacz");
       sessionStorage.setItem("clearInputsAfterSend", "1");
-
       window.location.href = "index.html";
     })
     .catch(err => {
@@ -316,34 +291,24 @@ for (let i = 0; i < codes.length; i++) {
     });
 }
 
-
 document.addEventListener("DOMContentLoaded", () => {
   const savedCodes = localStorage.getItem("codesPZ");
-  if (savedCodes) {
-    // zachowujemy kolejność tak, by index 0 był najnowszy
-    codes = JSON.parse(savedCodes);
-  }
+  if (savedCodes) codes = JSON.parse(savedCodes);
   updateList();
 
   const login = localStorage.getItem("login") || "brak";
   const trasa = localStorage.getItem("trasa") || "brak";
   const tablica = localStorage.getItem("tablica") || "brak";
-  document.getElementById("daneUzytkownika").innerHTML = `${login}  -  ${trasa}  -  ${tablica}`;
+  document.getElementById("daneUzytkownika").innerText = `${login}  -  ${trasa}  -  ${tablica}`;
 
   const html5Qr = new Html5Qrcode("reader");
-
   Html5Qrcode.getCameras().then(cameras => {
     if (cameras && cameras.length) {
-      const backCam = cameras.find(cam => {
-        const lbl = (cam.label || "").toLowerCase();
-        return lbl.includes("back") || lbl.includes("environment");
-      }) || cameras[0];
-
+      const backCam = cameras.find(cam => (cam.label || "").toLowerCase().includes("back")) || cameras[0];
       html5Qr.start(backCam.id, { fps: 10, qrbox: 250 }, text => {
         const val = (text || "").toUpperCase().trim();
         const exists = codes.find(c => (c.value || "").toUpperCase().trim() === val);
         if (!exists && val) {
-          // najnowszy na górze
           codes.unshift({ value: val, note: "", nok: false });
           saveCodes();
           updateList();
@@ -379,28 +344,5 @@ document.addEventListener("DOMContentLoaded", () => {
   <option value="CUBQ">
   <option value="DUOBQ">
 </datalist>
-
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
