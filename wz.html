@@ -1,3 +1,4 @@
+<!-- 👇 Wklej cały ten kod jako wz.html -->
 <!DOCTYPE html>
 <html lang="pl">
 <head>
@@ -49,11 +50,14 @@
       text-align: center;
     }
     .data-display {
-      font-size: 14px;
+      font-size: 0.9rem;
       background-color: #444;
-      padding: 10px;
-      border-radius: 8px;
-      margin-bottom: 20px;
+      padding: 8px 10px;
+      border-radius: 6px;
+      margin-bottom: 16px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
     #reader {
       width: 100%;
@@ -65,6 +69,7 @@
       color: #00ff00;
       margin-bottom: 12px;
     }
+
     input, button {
       width: 100%;
       padding: 10px;
@@ -155,11 +160,14 @@
       <div id="reader"></div>
       <div id="scan-result">Zeskanuj kod QR...</div>
 
-      <input type="text" id="manualInput" placeholder="Dodaj kod ręcznie" autocomplete="off">
-      <button onclick="addManual()">Dodaj do listy</button>
+      <!-- RĘCZNE DODAWANIE KODU: identyczne jak w PZ -->
+      <div style="display: flex; gap: 8px; margin: 10px 0;">
+        <input type="text" id="manualInput" placeholder="Dodaj kod ręcznie" autocomplete="off" style="flex: 1; padding: 4px; font-size: 1rem;">
+        <button onclick="addManual()" style="width: 20%; min-width: 80px; font-size: 0.8rem; padding: 4px;">Dodaj S/N</button>
+      </div>
 
       <div class="list-header">
-        <h3 style="margin:0;">Lista kodów</h3>
+        <h3 style="margin:0;">Zeskanowane</h3>
         <span class="badge" id="codeCount">0</span>
       </div>
       <ul id="codeList"></ul>
@@ -187,14 +195,12 @@
     }
 
     const scriptURL = "https://script.google.com/macros/s/AKfycbzNy43SKVLV4iQNDwAT_FssmZRymhloaYAWFxWgMja1rCR0xJTmXaLU_yYbnvx2kq0Ukw/exec";
-
-    // ZMIANA TYPÓW: BQCD->BQCUO, BQDUO->BQEXO, BQSH->BQEXI + dodany BQCUI
     const allowed = [
-      "FM","LQ","RQ","XS","ODL","ODR","CU","DUO","HICU","HIDUO","FMB","LQB","RQB",
-      "BQCUO","BQEXO","BQEXI","BQCUI"
+      "FM", "LQ", "RQ", "XS", "ODL", "ODR", "CU", "DUO", "HICU", "HIDUO", "FMB", "LQB", "RQB",
+      "FMBRBQ", "ODBRBQ", "CUBQ", "DUOBQ", "HIUNO"
     ];
 
-    let codes = []; // najnowszy kod na górze (indeks 0)
+    let codes = [];
 
     function updateList() {
       const list = document.getElementById("codeList");
@@ -256,7 +262,6 @@
 
       const exists = codes.find(c => (c.value || "").toUpperCase().trim() === val);
       if (!exists) {
-        // najnowszy na górze
         codes.unshift({ value: val, note: "" });
         localStorage.setItem("codesWZ", JSON.stringify(codes));
         updateList();
@@ -283,7 +288,6 @@
         return;
       }
 
-      // BEZ STATUSU OK/NOK: wysyłamy "KOD | TYP"
       const finalData = codes.map(c => `${c.value} | ${c.note}`);
 
       const formData = new FormData();
@@ -314,14 +318,14 @@
     document.addEventListener("DOMContentLoaded", () => {
       const savedCodes = localStorage.getItem("codesWZ");
       if (savedCodes) {
-        codes = JSON.parse(savedCodes); // najnowszy powinien być na index 0
+        codes = JSON.parse(savedCodes);
         updateList();
       }
 
       const login = localStorage.getItem("login") || "brak";
       const trasa = localStorage.getItem("trasa") || "brak";
       const tablica = localStorage.getItem("tablica") || "brak";
-      document.getElementById("daneUzytkownika").innerHTML = `${login}<br>${trasa}<br>${tablica}`;
+      document.getElementById("daneUzytkownika").innerHTML = `${login}  -  ${trasa}  -  ${tablica}`;
 
       const html5Qr = new Html5Qrcode("reader");
 
@@ -336,7 +340,6 @@
             const val = (text || "").toUpperCase().trim();
             const exists = codes.find(c => (c.value || "").toUpperCase().trim() === val);
             if (!exists && val) {
-              // najnowszy na górze
               codes.unshift({ value: val, note: "" });
               localStorage.setItem("codesWZ", JSON.stringify(codes));
               updateList();
@@ -355,24 +358,3 @@
 
 <datalist id="typList">
   <option value="FM">
-  <option value="LQ">
-  <option value="RQ">
-  <option value="XS">
-  <option value="CU">
-  <option value="DUO">
-  <option value="HICU">
-  <option value="HIDUO">
-  <option value="BQCUO">
-  <option value="BQEXO">
-  <option value="BQCUI">
-  <option value="BQEXI">
-  <option value="ODL">
-  <option value="ODR">
-  <option value="FMB">
-  <option value="LQB">
-  <option value="RQB">
-</datalist>
-
-</body>
-</html>
-
