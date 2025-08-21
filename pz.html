@@ -265,10 +265,13 @@ function sendData() {
 
   if (!confirm("Czy na pewno chcesz wysłać dane?")) return;
 
-  const finalData = codes.map(c => {
-    const status = c.nok ? "NOK" : "OK";
-    return `${c.value} | ${c.note} | ${status}`;
-  });
+const finalData = codes.map(c => {
+  const kod = c.value;
+  const typ = c.note;
+  const status = c.nok ? " - NOK" : "";
+  return `${typ} - ${kod}${status}`;
+});
+
 
   const formData = new FormData();
   formData.append("login", login);
@@ -365,6 +368,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 </body>
 </html>
+
 
 
 
