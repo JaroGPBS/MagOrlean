@@ -268,15 +268,21 @@ function sendData() {
 
   if (!confirm("Czy na pewno chcesz wysłać dane?")) return;
 
-  const finalData = codes.map((c, i) => {
-    const kod = (c.value || "").toString().trim().toUpperCase();
-    const typ = (c.note || "").toString().trim().toUpperCase();
-    const status = c.nok ? " - NOK" : "";
-    
-    if (!typ || !kod) {
-      console.warn(`❌ Błąd w kodzie na pozycji ${i}:`, c);
-      return `BŁĄD - ${i + 1}`;
-    }
+const finalData = [];
+
+for (let i = 0; i < codes.length; i++) {
+  const kod = (codes[i].value || "").toString().trim().toUpperCase();
+  const typ = (codes[i].note || "").toString().trim().toUpperCase();
+  const status = codes[i].nok ? " - NOK" : "";
+
+  if (!typ || !kod) {
+    console.warn(`❌ Pominięto pusty kod lub typ przy pozycji ${i}:`, codes[i]);
+    continue; // pomiń błędne wpisy
+  }
+
+  finalData.push(`${typ} - ${kod}${status}`);
+}
+
 
     return `${typ} - ${kod}${status}`;
   });
@@ -376,6 +382,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 </body>
 </html>
+
 
 
 
