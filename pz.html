@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pl">
 <head>
@@ -7,183 +8,105 @@
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
   <link href="https://fonts.googleapis.com/css2?family=Caveat&display=swap" rel="stylesheet">
   <style>
-    /* ... (CSS zostaje bez zmian jak w Twoim kodzie) ... */
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 16px;
+      background-color: #1c1c1c;
+      font-family: sans-serif;
+      color: #f5f5f5;
+    }
+    .form-wrapper {
+      max-width: 500px;
+      margin: auto;
+      background: #333;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 90vh;
+    }
+    .header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 5px;
+    }
+    .logo {
+      font-family: 'Caveat', cursive;
+      color: #f9f9f9;
+      font-size: 2.5rem;
+    }
+    .back-button {
+      width: 25%;
+      min-width: 80px;
+      padding: 8px;
+      font-size: 0.9rem;
+      border: none;
+      border-radius: 6px;
+      background-color: #555;
+      color: #fff;
+      cursor: pointer;
+      text-align: center;
+    }
+    .data-display {
+      font-size: 0.9rem;
+      background-color: #444;
+      padding: 8px 10px;
+      border-radius: 6px;
+      margin-bottom: 16px;
+    }
+    input, button {
+      width: 100%;
+      padding: 10px;
+      margin: 6px 0;
+      font-size: 1rem;
+      border: 1px solid #555;
+      border-radius: 4px;
+    }
+    #reader { width: 100%; max-width: 400px; margin: 16px auto; }
+    #scan-result { text-align: center; color: #00ff00; margin-bottom: 12px; }
+    .list-header { display:flex; align-items:center; gap:8px; }
+    .badge {
+      display:inline-block; padding:2px 8px; border:1px solid #666; border-radius:999px;
+      font-size:.85rem; background:#222; color:#f5f5f5;
+    }
+    .note-input {
+      width: 22%; min-width: 50px; padding: 6px;
+      font-size: 0.9rem; text-transform: uppercase;
+      background-color: #1c1c1c; color: #f5f5f5;
+    }
+    .code-text {
+      flex: 1; font-size: 0.95rem; word-break: break-word;
+      background-color: #1c1c1c; color: #f5f5f5; border: 1px solid #555; padding: 6px;
+    }
+    .remove-btn { color: red; cursor: pointer; padding: 0 6px; font-weight: bold; }
   </style>
 </head>
 <body>
 <div class="form-wrapper">
-  <!-- ... (HTML UI jak wcześniej) ... -->
+  <div class="header-row">
+    <div class="logo">PeZetka</div>
+    <button class="back-button" onclick="window.location.href='index.html'">← Cofnij</button>
+  </div>
+  <div class="data-display" id="daneUzytkownika">Wczytywanie danych...</div>
+  <div id="reader"></div>
+  <div id="scan-result">Zeskanuj kod QR...</div>
+  <div style="display: flex; gap: 8px; margin: 10px 0;">
+    <input type="text" id="manualInput" placeholder="Dodaj kod ręcznie" autocomplete="off" style="flex: 1; padding: 4px;">
+    <button onclick="addManual()" style="width: 20%; min-width: 80px; font-size: 0.8rem; padding: 4px;">Dodaj S/N</button>
+  </div>
+  <div class="list-header">
+    <h3 style="margin:0;">Liczba modułów</h3>
+    <span class="badge" id="codeCount">0</span>
+  </div>
+  <ul id="codeList"></ul>
+  <input type="text" id="dodatkoweInfo" placeholder="Dodatkowe informacje (opcjonalne)" autocomplete="off">
+  <button onclick="sendData()">Wyślij dane</button>
+  <p id="status"></p>
 </div>
-
-<script>
-function goBack() {
-  window.location.href = "index.html";
-}
-
-const allowed = [ "FM","LQ","RQ","XS","ODL","ODR","CU","DUO","HICU","HIDUO","FMB","LQB","RQB","FMBRBQ","ODBRBQ","CUBQ","DUOBQ","HIUNO" ];
-const scriptURL = "https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec"; // 🔁 Uzupełnij swoim ID
-let codes = [];
-
-function saveCodes() {
-  localStorage.setItem("codesPZ", JSON.stringify(codes));
-}
-
-function updateList() {
-  const list = document.getElementById("codeList");
-  const count = document.getElementById("codeCount");
-  list.innerHTML = "";
-  count.textContent = String(codes.length);
-
-  codes.forEach((item, index) => {
-    const li = document.createElement("li");
-
-    const inputNote = document.createElement("input");
-    inputNote.type = "text";
-    inputNote.placeholder = "TYP";
-    inputNote.className = "note-input";
-    inputNote.value = item.note || "";
-    inputNote.setAttribute("list", "typList");
-    inputNote.style.borderColor = item.note && allowed.includes(item.note) ? "#0f0" : "#555";
-
-    inputNote.oninput = () => {
-      const val = inputNote.value.toUpperCase().trim();
-      inputNote.value = val;
-      codes[index].note = val;
-      inputNote.style.borderColor = allowed.includes(val) ? "#0f0" : "red";
-      saveCodes();
-    };
-
-    const codeText = document.createElement("input");
-    codeText.type = "text";
-    codeText.value = item.value;
-    codeText.className = "code-text";
-    codeText.oninput = () => {
-      codes[index].value = codeText.value.toUpperCase().trim();
-      saveCodes();
-    };
-
-    const nokCheckbox = document.createElement("input");
-    nokCheckbox.type = "checkbox";
-    nokCheckbox.checked = !!item.nok;
-    nokCheckbox.style.width = "18px";
-    nokCheckbox.style.height = "18px";
-    nokCheckbox.onchange = () => {
-      codes[index].nok = nokCheckbox.checked;
-      saveCodes();
-    };
-
-    const nokLabel = document.createElement("label");
-    nokLabel.appendChild(nokCheckbox);
-    nokLabel.appendChild(document.createTextNode("NOK"));
-
-    const remove = document.createElement("span");
-    remove.textContent = "✕";
-    remove.onclick = () => { codes.splice(index, 1); saveCodes(); updateList(); };
-
-    li.appendChild(inputNote);
-    li.appendChild(codeText);
-    li.appendChild(nokLabel);
-    li.appendChild(remove);
-    list.appendChild(li);
-  });
-}
-
-function addManual() {
-  const input = document.getElementById("manualInput");
-  const val = input.value.trim().toUpperCase();
-  if (!val || val.length < 3) {
-    alert("Kod zbyt krótki lub pusty.");
-    return;
-  }
-  const exists = codes.find(c => (c.value || "").toUpperCase().trim() === val);
-  if (!exists) {
-    codes.unshift({ value: val, note: "", nok: false });
-    saveCodes();
-    updateList();
-  }
-  input.value = "";
-}
-
-function sendData() {
-  const login = localStorage.getItem("login") || "";
-  const trasa = localStorage.getItem("trasa") || "";
-  const tablica = localStorage.getItem("tablica") || "";
-  const dodatkoweInfo = document.getElementById("dodatkoweInfo").value.trim();
-
-  if (!login || !trasa || !tablica || codes.length === 0) {
-    alert("Brakuje danych lub lista kodów jest pusta.");
-    return;
-  }
-
-  if (!codes.every(c => c.note && c.note.trim() !== "")) {
-    alert("Wszystkie pola TYP muszą być uzupełnione.");
-    return;
-  }
-
-  if (!confirm("Czy na pewno chcesz wysłać dane?")) return;
-
-  const finalData = codes.map((c, i) => {
-    const typ = (typeof c.note === "string" ? c.note.trim().toUpperCase() : "");
-    const kod = (typeof c.value === "string" ? c.value.trim().toUpperCase() : "");
-    const status = c.nok ? " - NOK" : "";
-    return `${typ} - ${kod}${status}`;
-  });
-
-  const formData = new FormData();
-  formData.append("login", login);
-  formData.append("trasa", trasa);
-  formData.append("tablica", tablica);
-  formData.append("dodatkowe", dodatkoweInfo || "-");
-  formData.append("kody", JSON.stringify(finalData));
-  formData.append("strona", "pz");
-
-  fetch(scriptURL, { method: "POST", body: formData })
-    .then(res => res.text())
-    .then(() => {
-      alert("✅ Dane wysłane.");
-      codes = [];
-      localStorage.removeItem("codesPZ");
-      localStorage.removeItem("trasa");
-      localStorage.removeItem("tablica");
-      localStorage.removeItem("tablicaSam");
-      localStorage.removeItem("tablicaNacz");
-      sessionStorage.setItem("clearInputsAfterSend", "1");
-      window.location.href = "index.html";
-    })
-    .catch(err => {
-      document.getElementById("status").innerText = "❌ Błąd: " + err;
-    });
-}
-
-document.addEventListener("DOMContentLoaded", () => {
-  const savedCodes = localStorage.getItem("codesPZ");
-  if (savedCodes) {
-    codes = JSON.parse(savedCodes);
-  }
-  updateList();
-
-  const login = localStorage.getItem("login") || "brak";
-  const trasa = localStorage.getItem("trasa") || "brak";
-  const tablica = localStorage.getItem("tablica") || "brak";
-  document.getElementById("daneUzytkownika").innerText = `${login} - ${trasa} - ${tablica}`;
-
-  const html5Qr = new Html5Qrcode("reader");
-  Html5Qrcode.getCameras().then(cameras => {
-    if (cameras.length) {
-      const cam = cameras.find(c => c.label.toLowerCase().includes("back")) || cameras[0];
-      html5Qr.start(cam.id, { fps: 10, qrbox: 250 }, val => {
-        const code = val.trim().toUpperCase();
-        if (code && !codes.some(c => c.value === code)) {
-          codes.unshift({ value: code, note: "", nok: false });
-          saveCodes();
-          updateList();
-          document.getElementById("scan-result").innerText = "Zeskanowano: " + code;
-        }
-      });
-    }
-  });
-});
-</script>
 
 <datalist id="typList">
   <option value="FM"><option value="LQ"><option value="RQ"><option value="XS">
@@ -193,6 +116,123 @@ document.addEventListener("DOMContentLoaded", () => {
   <option value="FMBRBQ"><option value="ODBRBQ"><option value="CUBQ"><option value="DUOBQ">
 </datalist>
 
+<script>
+const allowed = ["FM","LQ","RQ","XS","ODL","ODR","CU","DUO","HICU","HIDUO","FMB","LQB","RQB","FMBRBQ","ODBRBQ","CUBQ","DUOBQ","HIUNO"];
+const scriptURL = "https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec"; // 🛠️ Uzupełnij swoim URL
+
+let codes = [];
+
+function saveCodes() {
+  localStorage.setItem("codesPZ", JSON.stringify(codes));
+}
+function updateList() {
+  const list = document.getElementById("codeList");
+  const count = document.getElementById("codeCount");
+  list.innerHTML = "";
+  count.textContent = codes.length;
+  codes.forEach((item, i) => {
+    const li = document.createElement("li");
+    const inputNote = document.createElement("input");
+    inputNote.type = "text";
+    inputNote.placeholder = "TYP";
+    inputNote.className = "note-input";
+    inputNote.setAttribute("list", "typList");
+    inputNote.value = item.note || "";
+    inputNote.style.borderColor = item.note && allowed.includes(item.note) ? "#0f0" : "#555";
+    inputNote.oninput = () => {
+      const val = inputNote.value.toUpperCase().trim();
+      inputNote.value = val;
+      codes[i].note = val;
+      inputNote.style.borderColor = allowed.includes(val) ? "#0f0" : "red";
+      saveCodes();
+    };
+    const codeText = document.createElement("input");
+    codeText.type = "text";
+    codeText.value = item.value;
+    codeText.className = "code-text";
+    codeText.oninput = () => {
+      codes[i].value = codeText.value.toUpperCase().trim();
+      saveCodes();
+    };
+    const nok = document.createElement("input");
+    nok.type = "checkbox";
+    nok.checked = !!item.nok;
+    nok.onchange = () => {
+      codes[i].nok = nok.checked;
+      saveCodes();
+    };
+    const remove = document.createElement("span");
+    remove.className = "remove-btn";
+    remove.innerText = "✕";
+    remove.onclick = () => { codes.splice(i, 1); updateList(); saveCodes(); };
+    li.append(inputNote, codeText, nok, remove);
+    list.appendChild(li);
+  });
+}
+function addManual() {
+  const input = document.getElementById("manualInput");
+  const val = input.value.trim().toUpperCase();
+  if (!val || val.length < 3) return alert("Kod zbyt krótki.");
+  if (!codes.some(c => c.value === val)) {
+    codes.unshift({ value: val, note: "", nok: false });
+    saveCodes();
+    updateList();
+  }
+  input.value = "";
+}
+function sendData() {
+  const login = localStorage.getItem("login") || "";
+  const trasa = localStorage.getItem("trasa") || "";
+  const tablica = localStorage.getItem("tablica") || "";
+  const dodatkowe = document.getElementById("dodatkoweInfo").value.trim() || "-";
+  if (!login || !trasa || !tablica || codes.length === 0) return alert("Brakuje danych.");
+  if (!codes.every(c => c.note && c.note.trim())) return alert("Uzupełnij wszystkie pola TYP.");
+  const finalData = codes.map(c => {
+    const typ = (c.note || "").toUpperCase().trim();
+    const kod = (c.value || "").toUpperCase().trim();
+    const nok = c.nok ? " - NOK" : "";
+    return `${typ} - ${kod}${nok}`;
+  });
+  const formData = new FormData();
+  formData.append("login", login);
+  formData.append("trasa", trasa);
+  formData.append("tablica", tablica);
+  formData.append("dodatkowe", dodatkowe);
+  formData.append("kody", JSON.stringify(finalData));
+  formData.append("strona", "pz");
+  fetch(scriptURL, { method: "POST", body: formData }).then(res => res.text()).then(() => {
+    alert("✅ Dane wysłane.");
+    codes = [];
+    localStorage.removeItem("codesPZ");
+    updateList();
+    localStorage.removeItem("trasa");
+    localStorage.removeItem("tablica");
+    window.location.href = "index.html";
+  }).catch(err => {
+    document.getElementById("status").innerText = "❌ Błąd: " + err;
+  });
+}
+document.addEventListener("DOMContentLoaded", () => {
+  const saved = localStorage.getItem("codesPZ");
+  if (saved) codes = JSON.parse(saved);
+  updateList();
+  document.getElementById("daneUzytkownika").innerText = `${localStorage.getItem("login") || "brak"} - ${localStorage.getItem("trasa") || "brak"} - ${localStorage.getItem("tablica") || "brak"}`;
+  const qr = new Html5Qrcode("reader");
+  Html5Qrcode.getCameras().then(cameras => {
+    if (cameras.length) {
+      const backCam = cameras.find(c => c.label.toLowerCase().includes("back")) || cameras[0];
+      qr.start(backCam.id, { fps: 10, qrbox: 250 }, txt => {
+        const val = txt.trim().toUpperCase();
+        if (val && !codes.some(c => c.value === val)) {
+          codes.unshift({ value: val, note: "", nok: false });
+          saveCodes();
+          updateList();
+          document.getElementById("scan-result").innerText = "Zeskanowano: " + val;
+        }
+      });
+    }
+  });
+});
+</script>
 </body>
 </html>
-
