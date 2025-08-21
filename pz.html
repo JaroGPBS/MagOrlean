@@ -229,11 +229,14 @@ function updateList() {
 function addManual() {
   const input = document.getElementById("manualInput");
   const val = input.value.trim().toUpperCase();
-  if (!val) return;
+
+  if (!val || val.length < 3) {
+    alert("Kod zbyt krótki lub pusty.");
+    return;
+  }
 
   const exists = codes.find(c => (c.value || "").toUpperCase().trim() === val);
   if (!exists) {
-    // najnowszy na górze
     codes.unshift({ value: val, note: "", nok: false });
     saveCodes();
     updateList();
@@ -265,12 +268,19 @@ function sendData() {
 
   if (!confirm("Czy na pewno chcesz wysłać dane?")) return;
 
-const finalData = codes.map(c => {
-  const typ = typeof c.note === "string" ? c.note.trim().toUpperCase() : "BRAK_TYP";
-  const kod = typeof c.value === "string" ? c.value.trim().toUpperCase() : "BRAK_KOD";
+const finalData = codes.map((c, i) => {
+  const typ = (typeof c.note === "string" && c.note.trim() !== "") ? c.note.trim().toUpperCase() : null;
+  const kod = (typeof c.value === "string" && c.value.trim() !== "") ? c.value.trim().toUpperCase() : null;
+
+  if (!typ || !kod) {
+    console.warn(`❌ Błąd w kodzie na pozycji ${i}:`, c);
+    return `BŁĄD - NIEPRAWIDŁOWY KOD`;
+  }
+
   const status = c.nok ? " - NOK" : "";
   return `${typ} - ${kod}${status}`;
 });
+
 
 
 
@@ -370,6 +380,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 </body>
 </html>
+
 
 
 
