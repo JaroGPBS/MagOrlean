@@ -269,8 +269,8 @@ function sendData() {
   if (!confirm("Czy na pewno chcesz wysłać dane?")) return;
 
 const finalData = codes.map((c, i) => {
-  const typ = (typeof c.note === "string" && c.note.trim() !== "") ? c.note.trim().toUpperCase() : null;
   const kod = (typeof c.value === "string" && c.value.trim() !== "") ? c.value.trim().toUpperCase() : null;
+  const typ = (typeof c.note === "string" && c.note.trim() !== "") ? c.note.trim().toUpperCase() : null;
 
   if (!typ || !kod) {
     console.warn(`❌ Błąd w kodzie na pozycji ${i}:`, c);
@@ -280,6 +280,7 @@ const finalData = codes.map((c, i) => {
   const status = c.nok ? " - NOK" : "";
   return `${typ} - ${kod}${status}`;
 });
+
 
 
 
@@ -380,6 +381,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 </body>
 </html>
+
 
 
 
