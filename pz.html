@@ -261,30 +261,25 @@ function sendData() {
     return;
   }
 
-  if (!codes.every(c => c.note)) {
+  if (!codes.every(c => c.note && c.note.trim() !== "")) {
     alert("Wszystkie pola TYP muszą być uzupełnione.");
     return;
   }
 
   if (!confirm("Czy na pewno chcesz wysłać dane?")) return;
 
-const finalData = codes.map((c, i) => {
-  const kod = (typeof c.value === "string" && c.value.trim() !== "") ? c.value.trim().toUpperCase() : null;
-  const typ = (typeof c.note === "string" && c.note.trim() !== "") ? c.note.trim().toUpperCase() : null;
+  const finalData = codes.map((c, i) => {
+    const kod = (c.value || "").toString().trim().toUpperCase();
+    const typ = (c.note || "").toString().trim().toUpperCase();
+    const status = c.nok ? " - NOK" : "";
+    
+    if (!typ || !kod) {
+      console.warn(`❌ Błąd w kodzie na pozycji ${i}:`, c);
+      return `BŁĄD - ${i + 1}`;
+    }
 
-  if (!typ || !kod) {
-    console.warn(`❌ Błąd w kodzie na pozycji ${i}:`, c);
-    return `BŁĄD - NIEPRAWIDŁOWY KOD`;
-  }
-
-  const status = c.nok ? " - NOK" : "";
-  return `${typ} - ${kod}${status}`;
-});
-
-
-
-
-
+    return `${typ} - ${kod}${status}`;
+  });
 
   const formData = new FormData();
   formData.append("login", login);
@@ -296,25 +291,25 @@ const finalData = codes.map((c, i) => {
 
   fetch(scriptURL, { method: "POST", body: formData })
     .then(res => res.text())
-.then(txt => {
-  alert("✅ Dane wysłane.");
-  codes = [];
-  localStorage.removeItem("codesPZ");
-  updateList();
+    .then(txt => {
+      alert("✅ Dane wysłane.");
+      codes = [];
+      localStorage.removeItem("codesPZ");
+      updateList();
 
-  // ⬇️ Czyść wszystkie dane
-  localStorage.removeItem("trasa");
-  localStorage.removeItem("tablicaSam");
-  localStorage.removeItem("tablicaNacz");
-  localStorage.removeItem("tablica");
-  sessionStorage.setItem("clearInputsAfterSend", "1");
+      localStorage.removeItem("trasa");
+      localStorage.removeItem("tablica");
+      localStorage.removeItem("tablicaSam");
+      localStorage.removeItem("tablicaNacz");
+      sessionStorage.setItem("clearInputsAfterSend", "1");
 
-  window.location.href = "index.html";
-})
+      window.location.href = "index.html";
+    })
     .catch(err => {
       document.getElementById("status").innerText = "❌ Błąd: " + err;
     });
 }
+
 
 document.addEventListener("DOMContentLoaded", () => {
   const savedCodes = localStorage.getItem("codesPZ");
@@ -381,6 +376,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 </body>
 </html>
+
 
 
 
