@@ -266,11 +266,12 @@ function sendData() {
   if (!confirm("Czy na pewno chcesz wysłać dane?")) return;
 
 const finalData = codes.map(c => {
-  const kod = c.value;
-  const typ = c.note;
+  const kod = (c.value || "").trim().toUpperCase();
+  const typ = (c.note || "").trim().toUpperCase();
   const status = c.nok ? " - NOK" : "";
   return `${typ} - ${kod}${status}`;
 });
+
 
 
   const formData = new FormData();
@@ -368,6 +369,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 </body>
 </html>
+
 
 
 
