@@ -250,18 +250,21 @@ function sendData() {
     return;
   }
 
-  if (!codes.every(c => c.note && c.note.trim() !== "")) {
-    alert("Wszystkie pola TYP muszą być uzupełnione.");
-    return;
+  for (const c of codes) {
+    const typ = (c.note || "").toString().trim().toUpperCase();
+    if (!allowed.includes(typ)) {
+      alert(`Nieprawidłowy TYP: "${typ}". Wybierz z listy.`);
+      return;
+    }
   }
 
   if (!confirm("Czy na pewno chcesz wysłać dane?")) return;
 
-  const finalData = codes.map((c, i) => {
+  const finalData = codes.map(c => {
     const kod = (c.value || "").toString().trim().toUpperCase();
     const typ = (c.note || "").toString().trim().toUpperCase();
     const status = c.nok ? " - NOK" : "";
-    return `${typ} - ${kod}${status}`;
+    return `${typ} - ${kod}${status}`.replace(/^undefined\s*-\s*/i, "");
   });
 
   const formData = new FormData();
@@ -293,7 +296,21 @@ function sendData() {
 
 document.addEventListener("DOMContentLoaded", () => {
   const savedCodes = localStorage.getItem("codesPZ");
-  if (savedCodes) codes = JSON.parse(savedCodes);
+  if (savedCodes) {
+    try {
+      const parsed = JSON.parse(savedCodes);
+      codes = Array.isArray(parsed)
+        ? parsed.map(it => {
+            const note = (it.note ?? it.typ ?? "").toString().toUpperCase().trim();
+            const value = (it.value ?? it.kod ?? "").toString().toUpperCase().trim();
+            return { value, note, nok: !!it.nok };
+          })
+        : [];
+      localStorage.setItem("codesPZ", JSON.stringify(codes));
+    } catch {
+      codes = [];
+    }
+  }
   updateList();
 
   const login = localStorage.getItem("login") || "brak";
@@ -346,3 +363,4 @@ document.addEventListener("DOMContentLoaded", () => {
 </datalist>
 </body>
 </html>
+
