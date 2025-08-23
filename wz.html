@@ -157,10 +157,18 @@
 
       <div class="data-display" id="daneUzytkownika">Wczytywanie danych...</div>
 
-      <div id="reader"></div>
-      <div id="scan-result">Zeskanuj kod QR...</div>
+<div id="scan-result" style="display: none;"></div>
+<button id="startScanBtn" onclick="startScanning()" style="
+  width: 200px; height: 50px;
+  font-size: 1rem; font-weight: bold;
+  background-color: #2e7d32; color: #fff;
+  border: none; border-radius: 12px;
+  cursor: pointer; display: block; margin: 10px auto;">
+  Skanuj
+</button>
+<div id="reader" style="display: none; width: 100%; max-width: 400px; margin: 16px auto;"></div>
 
-      <!-- RĘCZNE DODAWANIE KODU: identyczne jak w PZ -->
+
       <div style="display: flex; gap: 8px; margin: 10px 0;">
         <input type="text" id="manualInput" placeholder="Dodaj kod ręcznie" autocomplete="off" style="flex: 1; padding: 4px; font-size: 1rem;">
         <button onclick="addManual()" style="width: 20%; min-width: 80px; font-size: 0.8rem; padding: 4px;">Dodaj S/N</button>
@@ -380,7 +388,66 @@
   <option value="CUBQ">
   <option value="DUOBQ">
 </datalist>
+  <script>
+let html5Qr;
+let isScanning = false;
+
+function startScanning() {
+  if (isScanning) return;
+  isScanning = true;
+
+  document.getElementById("startScanBtn").style.display = "none";
+  const readerDiv = document.getElementById("reader");
+  readerDiv.style.display = "block";
+  readerDiv.innerHTML = "";
+
+  html5Qr = new Html5Qrcode("reader");
+
+  Html5Qrcode.getCameras().then(cameras => {
+    if (cameras && cameras.length) {
+      const backCam = cameras.find(cam => (cam.label || "").toLowerCase().includes("back")) || cameras[0];
+
+      html5Qr.start(backCam.id, { fps: 10, qrbox: 250 }, text => {
+        stopScanning();
+
+        const val = (text || "").toUpperCase().trim();
+        const exists = codes.find(c => (c.value || "").toUpperCase().trim() === val);
+        if (!exists && val) {
+          codes.unshift({ value: val, note: "" });
+          localStorage.setItem("codesWZ", JSON.stringify(codes));
+          updateList();
+        }
+
+        if ("vibrate" in navigator) navigator.vibrate(200);
+        const beep = document.getElementById("beepSound");
+        if (beep) beep.play().catch(() => {});
+      });
+    } else {
+      alert("Nie wykryto kamery.");
+      isScanning = false;
+    }
+  }).catch(err => {
+    alert("Błąd kamery: " + err);
+    isScanning = false;
+  });
+}
+
+function stopScanning() {
+  if (html5Qr && isScanning) {
+    html5Qr.stop().then(() => {
+      html5Qr.clear();
+      isScanning = false;
+      document.getElementById("reader").style.display = "none";
+      document.getElementById("startScanBtn").style.display = "inline-block";
+    }).catch(err => {
+      console.error("Błąd zatrzymania skanera:", err);
+      isScanning = false;
+    });
+  }
+}
+</script>
 
 </body>
 </html>
+
 
