@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
   <link href="https://fonts.googleapis.com/css2?family=Caveat&display=swap" rel="stylesheet">
+  <audio id="beepSound" src="https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg" preload="auto"></audio>
   <style>
     * { box-sizing: border-box; }
     body {
@@ -113,8 +114,17 @@
     </div>
 
     <div class="data-display" id="daneUzytkownika">Wczytywanie danych...</div>
-    <div id="reader"></div>
+
     <div id="scan-result">Zeskanuj kod QR...</div>
+    <button id="startScanBtn" onclick="startScanning()" style="
+      width: 100px; height: 100px; 
+      font-size: 1.1rem; font-weight: bold; 
+      background-color: #2e7d32; color: #fff; 
+      border: none; border-radius: 12px; 
+      margin: 10px auto; display: block; cursor: pointer;">
+      Skanuj
+    </button>
+    <div id="reader"></div>
 
     <div style="display: flex; gap: 8px; margin: 10px 0;">
       <input type="text" id="manualInput" placeholder="Dodaj kod ręcznie" autocomplete="off" style="flex: 1; padding: 4px; font-size: 1rem;">
@@ -317,28 +327,64 @@ document.addEventListener("DOMContentLoaded", () => {
   const trasa = localStorage.getItem("trasa") || "brak";
   const tablica = localStorage.getItem("tablica") || "brak";
   document.getElementById("daneUzytkownika").innerText = `${login}  -  ${trasa}  -  ${tablica}`;
+});
 
-  const html5Qr = new Html5Qrcode("reader");
+let html5Qr;
+let isScanning = false;
+
+function startScanning() {
+  if (isScanning) return;
+  isScanning = true;
+
+  const readerDiv = document.getElementById("reader");
+  readerDiv.innerHTML = "";
+  document.getElementById("scan-result").innerText = "Skanowanie...";
+
+  html5Qr = new Html5Qrcode("reader");
+
   Html5Qrcode.getCameras().then(cameras => {
     if (cameras && cameras.length) {
       const backCam = cameras.find(cam => (cam.label || "").toLowerCase().includes("back")) || cameras[0];
+
       html5Qr.start(backCam.id, { fps: 10, qrbox: 250 }, text => {
+        stopScanning();
+
         const val = (text || "").toUpperCase().trim();
         const exists = codes.find(c => (c.value || "").toUpperCase().trim() === val);
         if (!exists && val) {
           codes.unshift({ value: val, note: "", nok: false });
           saveCodes();
           updateList();
-          document.getElementById("scan-result").innerText = "Zeskanowano: " + val;
         }
+
+        document.getElementById("scan-result").innerText = "Zeskanowano: " + val;
+
+        if ("vibrate" in navigator) navigator.vibrate(200);
+        const beep = document.getElementById("beepSound");
+        if (beep) beep.play().catch(() => {});
       });
     } else {
       document.getElementById("scan-result").innerText = "❌ Nie wykryto kamery.";
+      isScanning = false;
     }
   }).catch(err => {
     document.getElementById("scan-result").innerText = "❌ Błąd kamery: " + err;
+    isScanning = false;
   });
-});
+}
+
+function stopScanning() {
+  if (html5Qr && isScanning) {
+    html5Qr.stop().then(() => {
+      html5Qr.clear();
+      isScanning = false;
+      document.getElementById("scan-result").innerText = "Zeskanuj kod QR...";
+    }).catch(err => {
+      console.error("Błąd zatrzymania skanera:", err);
+      isScanning = false;
+    });
+  }
+}
 </script>
 
 <datalist id="typList">
@@ -363,12 +409,3 @@ document.addEventListener("DOMContentLoaded", () => {
 </datalist>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
