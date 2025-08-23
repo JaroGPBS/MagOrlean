@@ -115,16 +115,17 @@
 
     <div class="data-display" id="daneUzytkownika">Wczytywanie danych...</div>
 
-    <div id="scan-result">Zeskanuj kod QR...</div>
-    <button id="startScanBtn" onclick="startScanning()" style="
-      width: 100px; height: 100px; 
-      font-size: 1.1rem; font-weight: bold; 
-      background-color: #2e7d32; color: #fff; 
-      border: none; border-radius: 12px; 
-      margin: 10px auto; display: block; cursor: pointer;">
-      Skanuj
-    </button>
-    <div id="reader"></div>
+<div id="scan-result">Zeskanuj kod QR...</div>
+<button id="startScanBtn" onclick="startScanning()" style="
+  width: 100px; height: 100px; 
+  font-size: 1.1rem; font-weight: bold; 
+  background-color: #2e7d32; color: #fff; 
+  border: none; border-radius: 12px; 
+  margin: 10px auto; display: block; cursor: pointer;">
+  Skanuj
+</button>
+<div id="reader"></div>
+
 
     <div style="display: flex; gap: 8px; margin: 10px 0;">
       <input type="text" id="manualInput" placeholder="Dodaj kod ręcznie" autocomplete="off" style="flex: 1; padding: 4px; font-size: 1rem;">
@@ -336,8 +337,12 @@ function startScanning() {
   if (isScanning) return;
   isScanning = true;
 
+  // Ukryj przycisk, pokaż skaner
+  document.getElementById("startScanBtn").style.display = "none";
   const readerDiv = document.getElementById("reader");
+  readerDiv.style.display = "block";
   readerDiv.innerHTML = "";
+
   document.getElementById("scan-result").innerText = "Skanowanie...";
 
   html5Qr = new Html5Qrcode("reader");
@@ -373,11 +378,14 @@ function startScanning() {
   });
 }
 
+
 function stopScanning() {
   if (html5Qr && isScanning) {
     html5Qr.stop().then(() => {
       html5Qr.clear();
       isScanning = false;
+      document.getElementById("reader").style.display = "none";
+      document.getElementById("startScanBtn").style.display = "inline-block";
       document.getElementById("scan-result").innerText = "Zeskanuj kod QR...";
     }).catch(err => {
       console.error("Błąd zatrzymania skanera:", err);
@@ -385,6 +393,7 @@ function stopScanning() {
     });
   }
 }
+
 </script>
 
 <datalist id="typList">
@@ -409,3 +418,4 @@ function stopScanning() {
 </datalist>
 </body>
 </html>
+
