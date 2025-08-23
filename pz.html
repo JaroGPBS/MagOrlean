@@ -116,16 +116,17 @@
     <div class="data-display" id="daneUzytkownika">Wczytywanie danych...</div>
 
 <div id="scan-result">Zeskanuj kod QR...</div>
-<button id="startScanBtn" onclick="startScanning()" style="
-  width: 100px; height: 100px; 
-  font-size: 1.1rem; font-weight: bold; 
-  background-color: #2e7d32; color: #fff; 
-  border: none; border-radius: 12px; 
-  margin: 10px auto; display: block; cursor: pointer;">
-  Skanuj
-</button>
-<div id="reader"></div>
-
+<div style="text-align: center; margin: 10px 0;">
+  <button id="startScanBtn" onclick="startScanning()" style="
+    width: 200px; height: 50px;
+    font-size: 1rem; font-weight: bold;
+    background-color: #2e7d32; color: #fff;
+    border: none; border-radius: 12px;
+    cursor: pointer;">
+    Skanuj
+  </button>
+</div>
+<div id="reader" style="display: none; width: 100%; max-width: 400px; margin: 16px auto;"></div>
 
     <div style="display: flex; gap: 8px; margin: 10px 0;">
       <input type="text" id="manualInput" placeholder="Dodaj kod ręcznie" autocomplete="off" style="flex: 1; padding: 4px; font-size: 1rem;">
@@ -418,4 +419,5 @@ function stopScanning() {
 </datalist>
 </body>
 </html>
+
 
