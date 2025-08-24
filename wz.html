@@ -338,6 +338,8 @@
       const tablica = localStorage.getItem("tablica") || "brak";
       document.getElementById("daneUzytkownika").innerHTML = `${login}  -  ${trasa}  -  ${tablica}`;
 
+      
+      /*
       const html5Qr = new Html5Qrcode("reader");
 
       Html5Qrcode.getCameras().then(cameras => {
@@ -365,6 +367,7 @@
         document.getElementById("scan-result").innerText = "❌ Błąd kamery: " + err;
       });
     });
+    */
   </script>
 
 <datalist id="typList">
@@ -448,6 +451,7 @@ function stopScanning() {
 
 </body>
 </html>
+
 
 
 
