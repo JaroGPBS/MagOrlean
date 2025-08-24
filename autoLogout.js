@@ -1,10 +1,12 @@
 document.addEventListener("DOMContentLoaded", () => {
   const now = new Date();
-  if (hours > 0 || (hours === 0 && minutes >= 1))
+  const hour = now.getHours();
+
+  // Wyloguj jeśli godzina to 20–23 lub 0–6
+  if (hour >= 20 || hour < 7) {
     localStorage.clear();
     if (!window.location.pathname.endsWith("index.html")) {
       window.location.href = "index.html";
     }
   }
 });
-
